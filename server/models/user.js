@@ -1,6 +1,7 @@
 import db from '../database/pool.js';
 import { users, invitations } from '../database/schema.js';
 import { eq, sql } from 'drizzle-orm';
+import { cacheGet, cacheSet, cacheDelete, CACHE_TTL } from '../cache/redis.js';
 
 export const createUser = async (instagramData, invitedBy = null) => {
   const { id, username, full_name, profile_picture } = instagramData;
@@ -37,6 +38,11 @@ export const banUser = async (userId, banned = true) => {
     .set({ isBanned: banned, updatedAt: new Date() })
     .where(eq(users.id, userId))
     .returning();
+  
+  // Invalidate user and users list cache
+  await cacheDelete(`user:${userId}`);
+  await cacheDelete('users:all');
+  
   return user;
 };
 
@@ -52,18 +58,31 @@ export const setAttendanceStatus = async (userId, attending) => {
     .set({ attending, updatedAt: new Date() })
     .where(eq(users.id, userId))
     .returning();
+  
+  // Invalidate user cache
+  await cacheDelete(`user:${userId}`);
+  
   return user;
 };
 
 export const getAllUsers = async () => {
-  return await db.select({
-    id: users.id,
-    instagramId: users.instagramId,
-    username: users.username,
-    isAdmin: users.isAdmin,
-    isBanned: users.isBanned,
-    createdAt: users.createdAt,
-  }).from(users).orderBy(sql`${users.createdAt} DESC`);
+  // Try cache first
+  let allUsers = await cacheGet('users:all');
+  
+  if (!allUsers) {
+    allUsers = await db.select({
+      id: users.id,
+      instagramId: users.instagramId,
+      username: users.username,
+      isAdmin: users.isAdmin,
+      isBanned: users.isBanned,
+      createdAt: users.createdAt,
+    }).from(users).orderBy(sql`${users.createdAt} DESC`);
+    
+    await cacheSet('users:all', allUsers, CACHE_TTL);
+  }
+  
+  return allUsers;
 };
 
 export const getUserInvitationCount = async (userId) => {

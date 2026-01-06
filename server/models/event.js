@@ -1,9 +1,20 @@
 import db from '../database/pool.js';
 import { eventConfig } from '../database/schema.js';
 import { eq, sql } from 'drizzle-orm';
+import { cacheGet, cacheSet, cacheDelete, CACHE_TTL } from '../cache/redis.js';
 
 export const getEventConfig = async () => {
-  const [config] = await db.select().from(eventConfig).limit(1);
+  // Try cache first
+  let config = await cacheGet('event:config');
+  
+  if (!config) {
+    const [dbConfig] = await db.select().from(eventConfig).limit(1);
+    config = dbConfig;
+    if (config) {
+      await cacheSet('event:config', config, CACHE_TTL);
+    }
+  }
+  
   return config;
 };
 
@@ -25,6 +36,10 @@ export const updateEventConfig = async (config) => {
     })
     .where(eq(eventConfig.id, 1))
     .returning();
+  
+  // Invalidate cache
+  await cacheDelete('event:config');
+  
   return updated;
 };
 
@@ -36,6 +51,10 @@ export const incrementParticipants = async () => {
     })
     .where(eq(eventConfig.id, 1))
     .returning();
+  
+  // Invalidate cache
+  await cacheDelete('event:config');
+  
   return updated;
 };
 

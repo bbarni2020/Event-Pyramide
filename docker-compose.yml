@@ -15,3 +15,15 @@ services:
       - ./server/database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./server/database/migrations.sql:/docker-entrypoint-initdb.d/migrations.sql
     restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    container_name: event_pyramide_cache
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+volumes:
+  redis-data:

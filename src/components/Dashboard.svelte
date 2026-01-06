@@ -3,18 +3,17 @@
   import { user } from '../stores/auth.js';
   import { invitationService, eventService } from '../services/api.js';
   import { authService } from '../services/api.js';
+  import { bootstrapInvitations, bootstrapConfig } from '../data/bootstrapDashboard.js';
 
-  let invitations = [];
+  let invitations = [...bootstrapInvitations];
   let newInvitation = { instagram_id: '' };
-  let config = null;
+  let config = { ...bootstrapConfig };
   let attending = null;
   let loading = false;
   let error = '';
   let success = '';
 
   onMount(async () => {
-    await loadInvitations();
-    await loadConfig();
     await loadAttendance();
   });
 
@@ -87,8 +86,10 @@
     }
   }
 
-  const invitationLimit = $user.isAdmin ? '∞' : (config?.maxInvitesPerUser || 5);
-  const remainingInvites = $user.isAdmin ? '∞' : Math.max(0, (config?.maxInvitesPerUser || 5) - invitations.length);
+  const invitationLimit = $user.isAdmin ? '∞' : (config?.maxInvitesPerUser || bootstrapConfig.maxInvitesPerUser);
+  const remainingInvites = $user.isAdmin
+    ? '∞'
+    : Math.max(0, (config?.maxInvitesPerUser || bootstrapConfig.maxInvitesPerUser) - invitations.length);
 
 </script>
 

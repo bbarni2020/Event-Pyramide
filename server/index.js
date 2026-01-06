@@ -11,6 +11,7 @@ import botRoutes from './routes/bot.js';
 import postgres from 'postgres';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { enableQueryMonitoring, getCacheStatus } from './monitoring.js';
 
 dotenv.config();
 
@@ -55,6 +56,20 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// Performance monitoring endpoint
+app.get('/api/admin/diagnostics', async (req, res) => {
+  try {
+    const cacheStatus = await getCacheStatus();
+    res.json({
+      cache: cacheStatus,
+      timestamp: new Date().toISOString(),
+      info: 'Slow queries logged to postgres logs. Check with: docker exec event_pyramide_db tail -f /var/log/postgresql/postgresql.log'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Serve static files from Vite dist in production, or fallback SPA route
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(join(__dirname, '../dist')));
@@ -71,5 +86,5 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  enableQueryMonitoring();
 });

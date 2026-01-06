@@ -5,6 +5,8 @@ import { eq, or } from 'drizzle-orm';
 import { InstagramBot } from '../services/instagramBot.js';
 import { setAttendanceStatus } from '../models/user.js';
 import { requireAuth } from '../middleware/auth.js';
+import { userCache } from '../cache/userCache.js';
+import { cacheGet, cacheSet, cacheDelete, USER_CACHE_TTL } from '../cache/redis.js';
 
 const router = express.Router();
 const bot = new InstagramBot();
@@ -112,6 +114,7 @@ router.post('/verify-otp', async (req, res) => {
       }
 
       user = newUser;
+      userCache.setUser(user.id, user);
     } else {
       // User exists, mark their invitation as accepted if they have one
       const [invitation] = await db.select().from(invitations)
@@ -122,6 +125,7 @@ router.post('/verify-otp', async (req, res) => {
           .set({ status: 'accepted', acceptedAt: new Date() })
           .where(eq(invitations.id, invitation.id));
       }
+      userCache.setUser(user.id, user);
     }
 
     // Create session
@@ -158,7 +162,23 @@ router.post('/logout', (req, res) => {
 router.get('/status', async (req, res) => {
   if (req.session.userId) {
     try {
-      const [user] = await db.select().from(users).where(eq(users.id, req.session.userId));
+      // Try Redis cache first
+      let user = await cacheGet(`user:${req.session.userId}`);
+      
+      if (!user) {
+        // Try in-memory cache
+        user = userCache.getUser(req.session.userId);
+      }
+      
+      // If not cached, fetch from DB
+      if (!user) {
+        const [dbUser] = await db.select().from(users).where(eq(users.id, req.session.userId));
+        if (dbUser) {
+          user = dbUser;
+          userCache.setUser(user.id, user);
+          await cacheSet(`user:${user.id}`, user, USER_CACHE_TTL);
+        }
+      }
       
       if (user) {
         return res.json({
@@ -188,6 +208,8 @@ router.post('/set-attendance', requireAuth, async (req, res) => {
     }
 
     await setAttendanceStatus(req.user.id, attending);
+    userCache.invalidateUser(req.user.id);
+    await cacheDelete(`user:${req.user.id}`);
     res.json({ success: true, attending });
   } catch (error) {
     console.error('Failed to set attendance:', error);
