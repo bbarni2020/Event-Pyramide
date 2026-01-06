@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Pyramide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto Condensed', sans-serif;
+            background: #0a0a0a;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.1) 2px, rgba(0,0,0,.1) 4px),
+                linear-gradient(135deg, #0f0f0f 0%, #050505 100%);
+            min-height: 100vh;
+            color: #999;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #555;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-family: monospace;
+            font-weight: 500;
+        }
+        
+        .navbar {
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(12px);
+            padding: 1rem 0;
+            border-bottom: 1px solid #222;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+        
+        .navbar-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar h1 {
+            font-size: 0.85rem;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .nav-actions {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        
+        .user-info {
+            font-weight: 500;
+            color: #888;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        
+        .admin-badge {
+            background: #6b2828;
+            color: #e0b888;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.65rem;
+            margin-left: 0.6rem;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            border: 1px solid #8b3a3a;
+        }
+        
+        button {
+            background: #1a1a1a;
+            color: #999;
+            border: 1px solid #2a2a2a;
+            padding: 0.55rem 1.1rem;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: all 0.2s ease;
+        }
+        
+        button:hover {
+            background: #6b2828;
+            border-color: #8b3a3a;
+            color: #e0b888;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(107, 40, 40, 0.3);
+        }
+        
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .content {
+            max-width: 1200px;
+            margin: 2.5rem auto;
+            padding: 0 2rem 3rem;
+        }
+        
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: 3px;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        
+        .alert.error {
+            background: #1a0f0f;
+            border: 1px solid #4a2828;
+            color: #ff8080;
+            border-left: 3px solid #ff6b6b;
+        }
+        
+        .alert.success {
+            background: #0f1a0f;
+            border: 1px solid #285028;
+            color: #5fda77;
+            border-left: 3px solid #51cf66;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        
+        .tab-button {
+            background: transparent;
+            border: none;
+            padding: 0.85rem 1.5rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+        
+        .tab-button.active {
+            color: #e0b888;
+            border-bottom-color: #6b2828;
+        }
+        
+        .tab-button:hover {
+            color: #999;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .form-group {
+            margin-bottom: 1.75rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+            color: #999;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 0.75rem 0.9rem;
+            border: 1px solid #2a2a2a;
+            background: #0d0d0d;
+            border-radius: 3px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            color: #bbb;
+        }
+        
+        input::placeholder, textarea::placeholder {
+            color: #555;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #6b2828;
+            background: #050505;
+            box-shadow: 0 0 0 2px rgba(107, 40, 40, 0.15);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+        
+        th {
+            background: #080808;
+            padding: 1rem 1.25rem;
+            text-align: left;
+            font-weight: 700;
+            border-bottom: 2px solid #1a1a1a;
+            color: #999;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        
+        td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #1a1a1a;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+        
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .indicator.pending {
+            background: #e0b888;
+            box-shadow: 0 0 4px rgba(224, 184, 136, 0.4);
+        }
+        
+        .indicator.accepted {
+            background: #5fda77;
+            box-shadow: 0 0 4px rgba(95, 218, 119, 0.4);
+        }
+        
+        .indicator.rejected {
+            background: #ff8080;
+            box-shadow: 0 0 4px rgba(255, 128, 128, 0.4);
+        }
+        
+        .panel {
+            background: #080808;
+            border: 1px solid #1a1a1a;
+            border-radius: 4px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.75rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        
+        .panel-header h3 {
+            font-size: 0.85rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+            font-weight: 700;
+        }
+        
+        .quota {
+            font-size: 0.7rem;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+        
+        .list-section {
+            margin-top: 1.5rem;
+        }
+        
+        .list-header {
+            font-size: 0.75rem;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 1.25rem;
+            font-weight: 700;
+        }
+        
+        .list-row {
+            display: flex;
+            align-items: center;
+            padding: 0.9rem 0.5rem;
+            border-bottom: 1px solid #1a1a1a;
+            font-size: 0.85rem;
+            gap: 1rem;
+            transition: background 0.15s ease;
+        }
+        
+        .list-row:last-child {
+            border-bottom: none;
+        }
+        
+        .list-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .alias {
+            color: #e0b888;
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .status-text {
+            color: #777;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading">Loading...</div>
+    </div>
+    
+    <script>
+        const app = document.getElementById('app');
+        let currentView = 'login';
+        
+        async function checkAuth() {
+            try {
+                const response = await fetch('/auth/check-status');
+                const data = await response.json();
+                return data;
+            } catch (e) {
+                return { authenticated: false };
+            }
+        }
+        
+        async function logout() {
+            await fetch('/auth/logout', { method: 'POST' });
+            location.reload();
+        }
+        
+        async function init() {
+            const auth = await checkAuth();
+            
+            if (!auth.authenticated) {
+                app.innerHTML = renderLogin();
+                setupLoginHandlers();
+            } else {
+                if (auth.user.is_admin) {
+                    app.innerHTML = renderApp(auth.user, 'admin');
+                    setupAdminHandlers();
+                } else {
+                    app.innerHTML = renderApp(auth.user, 'dashboard');
+                    setupDashboardHandlers();
+                }
+            }
+        }
+        
+        function renderLogin() {
+            return `
+                <div class="container">
+                    <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 2rem;">
+                        <div style="background: #080808; padding: 3rem; border-radius: 4px; box-shadow: inset 0 0 60px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4); max-width: 440px; width: 100%; border: 1px solid #1a1a1a;">
+                            <h1 style="font-size: 1.9rem; color: #e0b888; text-align: center; margin-bottom: 0.5rem; letter-spacing: 3px; font-weight: 700; text-transform: uppercase;">EVENT PYRAMIDE</h1>
+                            <p style="text-align: center; color: #777; font-size: 0.7rem; letter-spacing: 2.5px; margin-bottom: 2.5rem; text-transform: uppercase;">INVITE-ONLY SESSION</p>
+                            
+                            <div id="login-message"></div>
+                            
+                            <div id="login-form">
+                                <div style="background: #0d0d0d; padding: 1.25rem; border-radius: 3px; margin-bottom: 1.75rem; border-left: 3px solid #6b2828;">
+                                    <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; color: #e0b888; font-size: 0.8rem;"><span style="color: #6b2828;">•</span> EXCLUSIVE ACCESS</div>
+                                    <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; color: #e0b888; font-size: 0.8rem;"><span style="color: #6b2828;">•</span> GRANT UP TO 5 ALIASES</div>
+                                    <div style="display: flex; align-items: center; gap: 0.6rem; color: #e0b888; font-size: 0.8rem;"><span style="color: #6b2828;">•</span> DIGITAL ENTRY CODE</div>
+                                </div>
+                                
+                                <form onsubmit="requestCode(event)">
+                                    <div class="form-group">
+                                        <label>INSTAGRAM USERNAME</label>
+                                        <input type="text" id="username" placeholder="username" autocomplete="off">
+                                    </div>
+                                    <button type="submit" style="width: 100%;">REQUEST ACCESS</button>
+                                </form>
+                            </div>
+                            
+                            <div id="verify-form" style="display: none;">
+                                <div style="background: #0d0d0d; padding: 1.25rem; border-radius: 3px; margin-bottom: 1.75rem; text-align: center; border-left: 3px solid #6b2828;">
+                                    <p style="color: #777; font-size: 0.8rem; margin-bottom: 0.6rem;">CODE SENT TO @<span id="username-display"></span></p>
+                                    <p id="dev-otp-display" style="color: #e0b888; font-size: 0.75rem; display: none; margin-top: 0.6rem;"></p>
+                                </div>
+                                
+                                <form onsubmit="verifyCode(event)">
+                                    <div class="form-group">
+                                        <label>VERIFICATION CODE</label>
+                                        <input type="text" id="otp" placeholder="000000" autocomplete="off" maxlength="6">
+                                    </div>
+                                    <button type="submit" style="width: 100%; margin-bottom: 0.75rem;">VERIFY</button>
+                                    <button type="button" onclick="goBack()" style="width: 100%;">← BACK</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderApp(user, view) {
+            return `
+                <div class="container">
+                    <div class="navbar">
+                        <div class="navbar-inner">
+                            <h1>Event Pyramide</h1>
+                            <div class="nav-actions">
+                                <span class="user-info">
+                                    ${user.username}
+                                    ${user.is_admin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                                </span>
+                                ${user.is_admin ? '<button onclick="switchView(\'dashboard\')">DASHBOARD</button>' : ''}
+                                ${user.is_admin ? '<button onclick="switchView(\'admin\')">ADMIN</button>' : ''}
+                                <button onclick="logout()">LOGOUT</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content">
+                        ${view === 'admin' ? renderAdminPanel(user) : renderDashboard(user)}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderDashboard(user) {
+            return `
+                <div class="tabs">
+                    <button class="tab-button active" onclick="switchTab('invitations')">GRANT ACCESS</button>
+                    <button class="tab-button" onclick="switchTab('ticket')">EVENT TICKET</button>
+                    <button class="tab-button" onclick="switchTab('attendance')">ATTENDANCE</button>
+                </div>
+                
+                <div id="dashboard-message"></div>
+                
+                <div id="invitations-tab">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>GRANT ACCESS</h3>
+                            <div class="quota" id="quota-display">REMAINING: 0 / 5</div>
+                        </div>
+                        
+                        <form onsubmit="sendInvitation(event)">
+                            <div class="form-group">
+                                <label>INSTAGRAM ID</label>
+                                <input type="text" id="invite-id" placeholder="instagram username">
+                            </div>
+                            <button type="submit" id="invite-btn">GRANT ACCESS</button>
+                        </form>
+                        
+                        <div class="list-section">
+                            <div class="list-header">GRANTED (<span id="invitation-count">0</span>)</div>
+                            <div id="invitations-list"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="ticket-tab" style="display: none;">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>EVENT TICKET</h3>
+                        </div>
+                        <div id="ticket-content"></div>
+                    </div>
+                </div>
+                
+                <div id="attendance-tab" style="display: none;">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>ATTENDANCE</h3>
+                        </div>
+                        <div style="display: flex; gap: 1.25rem;">
+                            <button onclick="setAttendance(true)" id="attend-yes">YES, I'M ATTENDING</button>
+                            <button onclick="setAttendance(false)" id="attend-no">NOT ATTENDING</button>
+                        </div>
+                        <div id="attendance-status" style="margin-top: 1.25rem; padding: 1.25rem; background: #0d0d0d; border-radius: 3px; border-left: 3px solid #6b2828; display: none;"></div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderAdminPanel(user) {
+            return `
+                <div class="tabs">
+                    <button class="tab-button active" onclick="switchTab('users')">USERS</button>
+                    <button class="tab-button" onclick="switchTab('invitations')">INVITATIONS</button>
+                    <button class="tab-button" onclick="switchTab('tickets')">TICKETS</button>
+                    <button class="tab-button" onclick="switchTab('config')">CONFIG</button>
+                    <button class="tab-button" onclick="switchTab('broadcast')">BROADCAST</button>
+                </div>
+                
+                <div id="admin-message"></div>
+                
+                <div id="users-tab">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>USERS</h3>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>USERNAME</th>
+                                    <th>ROLE</th>
+                                    <th>STATUS</th>
+                                    <th>ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="invitations-tab" style="display: none;">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>INVITATIONS</h3>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>INVITER</th>
+                                    <th>INVITEE</th>
+                                    <th>STATUS</th>
+                                    <th>CREATED</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-invitations-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="tickets-tab" style="display: none;">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>TICKETS</h3>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>USER</th>
+                                    <th>TICKET CODE</th>
+                                    <th>TIER</th>
+                                    <th>PRICE</th>
+                                    <th>ISSUED</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-tickets-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="config-tab" style="display: none;">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>EVENT CONFIGURATION</h3>
+                        </div>
+                        <form onsubmit="updateConfig(event)">
+                            <div class="form-group">
+                                <label>EVENT DATE</label>
+                                <input type="datetime-local" id="config-event-date">
+                            </div>
+                            <div class="form-group">
+                                <label>MAX PARTICIPANTS</label>
+                                <input type="number" id="config-max-participants">
+                            </div>
+                            <div class="form-group">
+                                <label>MAX INVITES PER USER</label>
+                                <input type="number" id="config-max-invites">
+                            </div>
+                            <div class="form-group">
+                                <label>TICKET PRICE</label>
+                                <input type="number" id="config-ticket-price" step="0.01">
+                            </div>
+                            <button type="submit">SAVE CONFIGURATION</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div id="broadcast-tab" style="display: none;">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>BROADCAST MESSAGE</h3>
+                        </div>
+                        <form onsubmit="sendBroadcast(event)">
+                            <div class="form-group">
+                                <label>MESSAGE</label>
+                                <textarea id="broadcast-content" rows="6" placeholder="Enter message..."></textarea>
+                            </div>
+                            <button type="submit">SEND BROADCAST</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function switchView(view) {
+            location.reload();
+        }
+        
+        async function requestCode(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            if (!username) {
+                showMessage('login-message', 'Enter your Instagram username', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/auth/request-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('login-form').style.display = 'none';
+                    document.getElementById('verify-form').style.display = 'block';
+                    document.getElementById('username-display').textContent = username;
+                    if (data.devOtp || data.dev_otp) {
+                        const otpDisplay = document.getElementById('dev-otp-display');
+                        otpDisplay.textContent = `DEV: ${data.devOtp || data.dev_otp}`;
+                        otpDisplay.style.display = 'block';
+                    }
+                } else {
+                    showMessage('login-message', data.error || 'Failed to send code', 'error');
+                }
+            } catch (err) {
+                showMessage('login-message', 'Error: ' + err.message, 'error');
+            }
+        }
+        
+        async function verifyCode(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const otp = document.getElementById('otp').value.trim();
+            
+            if (!otp) {
+                showMessage('login-message', 'Enter the verification code', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, otp })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    showMessage('login-message', data.error || 'Verification failed', 'error');
+                }
+            } catch (err) {
+                showMessage('login-message', 'Error: ' + err.message, 'error');
+            }
+        }
+        
+        function goBack() {
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('verify-form').style.display = 'none';
+        }
+        
+        async function sendInvitation(e) {
+            e.preventDefault();
+            const id = document.getElementById('invite-id').value.trim();
+            
+            if (!id) {
+                showMessage('dashboard-message', 'Enter an Instagram ID', 'error');
+                return;
+            }
+            
+            document.getElementById('invite-btn').disabled = true;
+            
+            try {
+                const response = await fetch('/api/invitations/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ instagram_id: id, username: id })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('dashboard-message', 'Invitation sent successfully!', 'success');
+                    document.getElementById('invite-id').value = '';
+                    await loadInvitations();
+                } else {
+                    showMessage('dashboard-message', data.error || 'Failed to send invitation', 'error');
+                }
+            } catch (err) {
+                showMessage('dashboard-message', 'Error: ' + err.message, 'error');
+            } finally {
+                document.getElementById('invite-btn').disabled = false;
+            }
+        }
+        
+        async function loadInvitations() {
+            try {
+                const response = await fetch('/api/invitations/');
+                const invitations = await response.json();
+                
+                document.getElementById('invitation-count').textContent = invitations.length;
+                const list = document.getElementById('invitations-list');
+                
+                if (invitations.length === 0) {
+                    list.innerHTML = '<div style="color: #777; text-align: center; padding: 1.25rem; font-size: 0.85rem;">No invitations sent yet</div>';
+                } else {
+                    list.innerHTML = invitations.map(inv => `
+                        <div class="list-row">
+                            <span class="indicator indicator-${inv.status}"></span>
+                            <span class="alias">@${inv.invitee_username}</span>
+                            <span class="status-text">${inv.status.toUpperCase()}</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('Failed to load invitations:', e);
+            }
+        }
+        
+        async function loadTicket() {
+            try {
+                const response = await fetch('/api/tickets/my-ticket');
+                const ticket = await response.json();
+                
+                const content = document.getElementById('ticket-content');
+                if (!ticket) {
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 2rem;">
+                            <p style="color: #777; margin-bottom: 1.75rem; font-size: 0.85rem;">No ticket generated yet</p>
+                            <button onclick="generateTicket()">GENERATE TICKET</button>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = `
+                        <div style="background: #0d0d0d; padding: 1.75rem; border-radius: 3px; border-left: 3px solid #6b2828; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 0;">
+                                <div>
+                                    <div style="color: #777; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">TICKET CODE</div>
+                                    <div style="color: #e0b888; font-size: 0.9rem; font-weight: 600; margin-top: 0.4rem;">${ticket.ticket_code}</div>
+                                </div>
+                                <div>
+                                    <div style="color: #777; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">TIER</div>
+                                    <div style="color: #e0b888; font-size: 0.9rem; font-weight: 600; margin-top: 0.4rem;">${ticket.tier}</div>
+                                </div>
+                                <div>
+                                    <div style="color: #777; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">PRICE</div>
+                                    <div style="color: #e0b888; font-size: 0.9rem; font-weight: 600; margin-top: 0.4rem;">USD ${parseFloat(ticket.price).toFixed(2)}</div>
+                                </div>
+                                <div>
+                                    <div style="color: #777; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">ISSUED</div>
+                                    <div style="color: #e0b888; font-size: 0.9rem; font-weight: 600; margin-top: 0.4rem;">${new Date(ticket.issued_at).toLocaleDateString()}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                console.error('Failed to load ticket:', e);
+            }
+        }
+        
+        async function generateTicket() {
+            try {
+                const response = await fetch('/api/tickets/generate', { method: 'POST' });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('dashboard-message', 'Ticket generated!', 'success');
+                    await loadTicket();
+                } else {
+                    showMessage('dashboard-message', data.error || 'Failed to generate ticket', 'error');
+                }
+            } catch (err) {
+                showMessage('dashboard-message', 'Error: ' + err.message, 'error');
+            }
+        }
+        
+        async function setAttendance(value) {
+            try {
+                const response = await fetch('/auth/set-attendance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ attending: value })
+                });
+                
+                if (response.ok) {
+                    const status = document.getElementById('attendance-status');
+                    status.style.display = 'block';
+                    status.innerHTML = `<div style="color: #5fda77;">✓ You've marked yourself as ${value ? 'attending' : 'not attending'}</div>`;
+                    setTimeout(() => { status.style.display = 'none'; }, 3000);
+                } else {
+                    showMessage('dashboard-message', 'Failed to update attendance', 'error');
+                }
+            } catch (err) {
+                showMessage('dashboard-message', 'Error: ' + err.message, 'error');
+            }
+        }
+        
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/users');
+                const users = await response.json();
+                
+                const list = document.getElementById('users-list');
+                list.innerHTML = users.map(user => `
+                    <tr>
+                        <td>${user.username}</td>
+                        <td>${user.is_admin ? '<span style="color: #e0b888; font-size: 0.75rem; font-weight: 600;">ADMIN</span>' : '<span style="color: #888; font-size: 0.75rem; font-weight: 500;">USER</span>'}</td>
+                        <td>${user.is_banned ? '<span style="color: #ff8080; font-size: 0.75rem; font-weight: 600;">BANNED</span>' : '<span style="color: #5fda77; font-size: 0.75rem; font-weight: 600;">ACTIVE</span>'}</td>
+                        <td>
+                            <button onclick="toggleBan(${user.id}, ${user.is_banned})" style="font-size: 0.7rem; padding: 0.4rem 0.75rem;">
+                                ${user.is_banned ? 'UNBAN' : 'BAN'}
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('Failed to load users:', e);
+            }
+        }
+        
+        async function toggleBan(userId, isBanned) {
+            const endpoint = isBanned ? '/api/admin/users/' + userId + '/unban' : '/api/admin/users/' + userId + '/ban';
+            try {
+                const response = await fetch(endpoint, { method: 'POST' });
+                if (response.ok) {
+                    loadUsers();
+                    showMessage('admin-message', isBanned ? 'User unbanned' : 'User banned', 'success');
+                }
+            } catch (e) {
+                showMessage('admin-message', 'Error: ' + e.message, 'error');
+            }
+        }
+        
+        async function loadInvitationsAdmin() {
+            try {
+                const response = await fetch('/api/admin/invitations');
+                const invitations = await response.json();
+                
+                const list = document.getElementById('admin-invitations-list');
+                list.innerHTML = invitations.map(inv => `
+                    <tr>
+                        <td>${inv.inviter_username || inv.inviter_id}</td>
+                        <td>@${inv.invitee_username}</td>
+                        <td><span style="color: #e0b888; font-size: 0.75rem; font-weight: 600;">${inv.status.toUpperCase()}</span></td>
+                        <td>${new Date(inv.created_at).toLocaleDateString()}</td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('Failed to load invitations:', e);
+            }
+        }
+        
+        async function loadTicketsAdmin() {
+            try {
+                const response = await fetch('/api/admin/tickets');
+                const tickets = await response.json();
+                
+                const list = document.getElementById('admin-tickets-list');
+                list.innerHTML = tickets.map(ticket => `
+                    <tr>
+                        <td>${ticket.username || ticket.user_id}</td>
+                        <td>${ticket.ticket_code}</td>
+                        <td>${ticket.tier}</td>
+                        <td>USD ${parseFloat(ticket.price).toFixed(2)}</td>
+                        <td>${new Date(ticket.issued_at).toLocaleDateString()}</td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('Failed to load tickets:', e);
+            }
+        }
+        
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/admin/config');
+                const config = await response.json();
+                
+                if (config.id || Object.keys(config).length > 0) {
+                    document.getElementById('config-event-date').value = config.event_date ? new Date(config.event_date).toISOString().slice(0, 16) : '';
+                    document.getElementById('config-max-participants').value = config.max_participants || '';
+                    document.getElementById('config-max-invites').value = config.max_invites_per_user || '5';
+                    document.getElementById('config-ticket-price').value = config.ticket_price || '';
+                }
+            } catch (e) {
+                console.error('Failed to load config:', e);
+            }
+        }
+        
+        async function updateConfig(e) {
+            e.preventDefault();
+            const data = {
+                event_date: document.getElementById('config-event-date').value,
+                max_participants: parseInt(document.getElementById('config-max-participants').value) || 0,
+                max_invites_per_user: parseInt(document.getElementById('config-max-invites').value) || 5,
+                ticket_price: parseFloat(document.getElementById('config-ticket-price').value) || 0,
+                currency: 'USD'
+            };
+            
+            try {
+                const response = await fetch('/api/admin/config', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    showMessage('admin-message', 'Configuration updated!', 'success');
+                } else {
+                    showMessage('admin-message', 'Failed to update configuration', 'error');
+                }
+            } catch (err) {
+                showMessage('admin-message', 'Error: ' + err.message, 'error');
+            }
+        }
+        
+        async function sendBroadcast(e) {
+            e.preventDefault();
+            const content = document.getElementById('broadcast-content').value.trim();
+            if (!content) {
+                showMessage('admin-message', 'Enter a message', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/bot/broadcast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('admin-message', `Broadcast sent to ${data.results.success} users`, 'success');
+                    document.getElementById('broadcast-content').value = '';
+                } else {
+                    showMessage('admin-message', data.error || 'Failed to send broadcast', 'error');
+                }
+            } catch (err) {
+                showMessage('admin-message', 'Error: ' + err.message, 'error');
+            }
+        }
+        
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="alert ${type}">${type === 'error' ? '⚠' : '✓'} ${message}</div>`;
+            setTimeout(() => {
+                element.innerHTML = '';
+            }, 4000);
+        }
+        
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('[id$="-tab"]');
+            tabs.forEach(tab => tab.style.display = 'none');
+            
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            const tabId = tabName + '-tab';
+            const tab = document.getElementById(tabId);
+            if (tab) {
+                tab.style.display = 'block';
+                
+                event.target.classList.add('active');
+                
+                if (tabName === 'invitations' && document.getElementById('invitations-list')) {
+                    loadInvitations();
+                } else if (tabName === 'ticket' && document.getElementById('ticket-content')) {
+                    loadTicket();
+                } else if (tabName === 'users') {
+                    loadUsers();
+                } else if (tabName === 'invitations' && document.getElementById('admin-invitations-list')) {
+                    loadInvitationsAdmin();
+                } else if (tabName === 'tickets') {
+                    loadTicketsAdmin();
+                } else if (tabName === 'config') {
+                    loadConfig();
+                }
+            }
+        }
+        
+        function setupLoginHandlers() {
+            document.getElementById('username').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') requestCode(new Event('submit'));
+            });
+            document.getElementById('otp').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') verifyCode(new Event('submit'));
+            });
+        }
+        
+        function setupDashboardHandlers() {
+            loadInvitations();
+            loadTicket();
+        }
+        
+        function setupAdminHandlers() {
+            loadUsers();
+        }
+        
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+{
+  "app_title": "Event Pyramide",
+  "app_subtitle": "Invite-Only Session",
+  "login": {
+    "feature_exclusive": "Exclusive Access",
+    "feature_invites": "Grant Up To 5 Aliases",
+    "feature_ticket": "Digital Entry Code",
+    "username_label": "Instagram Username",
+    "username_placeholder": "username",
+    "request_access": "Request Access",
+    "verify_code": "Verify",
+    "back": "← Back",
+    "code_sent": "Code Sent To",
+    "verification_code_label": "Verification Code",
+    "verification_placeholder": "000000",
+    "enter_username": "Enter your Instagram username",
+    "enter_code": "Enter the verification code",
+    "send_code_failed": "Failed to send code",
+    "verification_failed": "Verification failed"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "admin": "Admin",
+    "logout": "Logout",
+    "admin_badge": "Admin"
+  },
+  "dashboard": {
+    "tabs": {
+      "grant_access": "Grant Access",
+      "event_ticket": "Event Ticket",
+      "attendance": "Attendance"
+    },
+    "invitations": {
+      "title": "Grant Access",
+      "remaining": "Remaining",
+      "instagram_label": "Instagram ID",
+      "instagram_placeholder": "instagram username",
+      "grant_button": "Grant Access",
+      "granted_count": "Granted",
+      "no_invitations": "No invitations sent yet",
+      "success": "Invitation sent successfully!",
+      "failed": "Failed to send invitation",
+      "enter_id": "Enter an Instagram ID",
+      "status_pending": "Pending",
+      "status_accepted": "Accepted",
+      "status_rejected": "Rejected"
+    },
+    "ticket": {
+      "title": "Event Ticket",
+      "no_ticket": "No ticket generated yet",
+      "generate_button": "Generate Ticket",
+      "ticket_code": "Ticket Code",
+      "tier": "Tier",
+      "price": "Price",
+      "issued": "Issued",
+      "generated": "Ticket generated!",
+      "failed": "Failed to generate ticket"
+    },
+    "attendance": {
+      "title": "Attendance",
+      "yes": "Yes, I'm Attending",
+      "no": "Not Attending",
+      "marked_attending": "You've marked yourself as attending",
+      "marked_not_attending": "You've marked yourself as not attending",
+      "failed": "Failed to update attendance"
+    }
+  },
+  "admin": {
+    "tabs": {
+      "users": "Users",
+      "invitations": "Invitations",
+      "tickets": "Tickets",
+      "config": "Config",
+      "broadcast": "Broadcast"
+    },
+    "users": {
+      "title": "Users",
+      "username": "Username",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions",
+      "role_admin": "Admin",
+      "role_user": "User",
+      "status_banned": "Banned",
+      "status_active": "Active",
+      "ban": "Ban",
+      "unban": "Unban",
+      "user_banned": "User banned",
+      "user_unbanned": "User unbanned"
+    },
+    "invitations": {
+      "title": "Invitations",
+      "inviter": "Inviter",
+      "invitee": "Invitee",
+      "status": "Status",
+      "created": "Created"
+    },
+    "tickets": {
+      "title": "Tickets",
+      "user": "User",
+      "ticket_code": "Ticket Code",
+      "tier": "Tier",
+      "price": "Price",
+      "issued": "Issued"
+    },
+    "config": {
+      "title": "Event Configuration",
+      "event_date": "Event Date",
+      "max_participants": "Max Participants",
+      "max_invites": "Max Invites Per User",
+      "ticket_price": "Ticket Price",
+      "save": "Save Configuration",
+      "updated": "Configuration updated!",
+      "failed": "Failed to update configuration"
+    },
+    "broadcast": {
+      "title": "Broadcast Message",
+      "message_label": "Message",
+      "message_placeholder": "Enter message...",
+      "send": "Send Broadcast",
+      "sent": "Broadcast sent to {count} users",
+      "failed": "Failed to send broadcast",
+      "enter_message": "Enter a message"
+    }
+  },
+  "messages": {
+    "error": "Error",
+    "success": "Success"
+  }
+}
