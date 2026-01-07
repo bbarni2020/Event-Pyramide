@@ -76,3 +76,24 @@ def create_invitation():
         if 'duplicate' in str(e).lower():
             return jsonify({'error': 'User already invited'}), 400
         return jsonify({'error': 'Failed to create invitation'}), 500
+
+@invitations_bp.route('/<int:invitation_id>', methods=['DELETE'])
+@require_auth
+def delete_invitation(invitation_id):
+    user_id = session.get('user_id')
+    invitation = Invitation.query.get(invitation_id)
+    
+    if not invitation:
+        return jsonify({'error': 'Invitation not found'}), 404
+    
+    user = User.query.get(user_id)
+    if invitation.inviter_id != user_id and not user.is_admin:
+        return jsonify({'error': 'Not authorized to delete this invitation'}), 403
+    
+    try:
+        db.session.delete(invitation)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to delete invitation'}), 500

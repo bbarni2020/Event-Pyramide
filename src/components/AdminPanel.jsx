@@ -5,6 +5,7 @@ import './AdminPanel.css';
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [invitations, setInvitations] = useState([]);
   const [config, setConfig] = useState(null);
   const [broadcastMessage, setBroadcastMessage] = useState('');
@@ -65,6 +66,21 @@ export default function AdminPanel() {
     }
   };
 
+  const updateUserRole = async (userId, role) => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      await adminService.updateUserRole(userId, role);
+      await loadData();
+      setSuccess('Role updated');
+    } catch (err) {
+      setError('Failed to update role');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const sendBroadcast = async () => {
     if (!broadcastMessage.trim()) {
       setError('Please enter a message');
@@ -118,45 +134,72 @@ export default function AdminPanel() {
 
       <div className="tab-content">
         {activeTab === 'users' && (
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>ALIAS</th>
-                  <th>INSTAGRAM ID</th>
-                  <th>ADMIN</th>
-                  <th>STATUS</th>
-                  <th>REGISTERED</th>
-                  <th>ACTION</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
+          <div>
+            <input
+              type="text"
+              className="search-input"
+              placeholder="SEARCH BY ALIAS OR INSTAGRAM ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ALIAS</th>
+                    <th>INSTAGRAM ID</th>
+                    <th>ROLE</th>
+                    <th>STATUS</th>
+                    <th>REGISTERED</th>
+                    <th>ACTION</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users
+                    .filter((user) =>
+                      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      user.instagram_id.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .map((user) => (
+                      <tr key={user.id}>
                     <td className="alias">@{user.username}</td>
-                    <td className="monospace">{user.instagramId}</td>
-                    <td>{user.isAdmin ? '✓' : '—'}</td>
+                    <td className="monospace">{user.instagram_id}</td>
                     <td>
-                      {user.isBanned ? (
+                      <select
+                        value={user.role || (user.is_admin ? 'admin' : 'user')}
+                        onChange={(e) => updateUserRole(user.id, e.target.value)}
+                        disabled={loading}
+                      >
+                        <option value="user">user</option>
+                        <option value="admin">admin</option>
+                        <option value="staff">staff</option>
+                        <option value="ticket-inspector">ticket-inspector</option>
+                        <option value="security">security</option>
+                        <option value="bartender">bartender</option>
+                      </select>
+                    </td>
+                    <td>
+                      {user.is_banned ? (
                         <span className="badge banned">BANNED</span>
                       ) : (
                         <span className="badge active">ACTIVE</span>
                       )}
                     </td>
-                    <td className="timestamp">{formatDate(user.createdAt)}</td>
+                    <td className="timestamp">{formatDate(user.created_at)}</td>
                     <td>
                       <button 
                         className="action-btn" 
-                        onClick={() => toggleBanUser(user.id, user.isBanned)}
+                        onClick={() => toggleBanUser(user.id, user.is_banned)}
                         disabled={loading}
                       >
-                        {user.isBanned ? 'RESTORE' : 'BAN'}
+                        {user.is_banned ? 'RESTORE' : 'BAN'}
                       </button>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                    ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
@@ -235,13 +278,68 @@ export default function AdminPanel() {
                 </div>
               </div>
               <div className="form-group">
+                <label htmlFor="memberCountReleaseDate">PARTICIPANT COUNT RELEASE DATE</label>
+                <input 
+                  id="memberCountReleaseDate" 
+                  type="datetime-local" 
+                  value={config.releaseDateParticipants}
+                  onChange={(e) => setConfig({...config, releaseDateParticipants: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
                 <label className="checkbox-label">
                   <input 
                     type="checkbox" 
-                    checked={config.infoPublic}
-                    onChange={(e) => setConfig({...config, infoPublic: e.target.checked})}
+                    checked={config.participantsPublic}
+                    onChange={(e) => setConfig({...config, participantsPublic: e.target.checked})}
                   />
-                  <span>PUBLIC INFORMATION</span>
+                  <span>PARTICIPANTS COUNT PUBLIC</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>EVENT DATE VISIBILITY</legend>
+              <div className="form-group">
+                <label htmlFor="eventDateReleaseDate">EVENT DATE RELEASE DATE</label>
+                <input 
+                  id="eventDateReleaseDate" 
+                  type="datetime-local" 
+                  value={config.releaseDateEventDate}
+                  onChange={(e) => setConfig({...config, releaseDateEventDate: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    checked={config.eventDatePublic}
+                    onChange={(e) => setConfig({...config, eventDatePublic: e.target.checked})}
+                  />
+                  <span>EVENT DATE PUBLIC</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>EVENT LOCATION VISIBILITY</legend>
+              <div className="form-group">
+                <label htmlFor="eventPlaceReleaseDate">LOCATION RELEASE DATE</label>
+                <input 
+                  id="eventPlaceReleaseDate" 
+                  type="datetime-local" 
+                  value={config.releaseDateEventPlace}
+                  onChange={(e) => setConfig({...config, releaseDateEventPlace: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    checked={config.eventPlacePublic}
+                    onChange={(e) => setConfig({...config, eventPlacePublic: e.target.checked})}
+                  />
+                  <span>LOCATION PUBLIC</span>
                 </label>
               </div>
               <div className="form-group">

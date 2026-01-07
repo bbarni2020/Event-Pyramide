@@ -86,6 +86,7 @@ def verify_otp():
             user = User(
                 username=username,
                 instagram_id=username,
+                role='admin' if is_admin else 'user',
                 is_admin=is_admin
             )
             db.session.add(user)
@@ -103,12 +104,14 @@ def verify_otp():
                 db.session.commit()
         
         session['user_id'] = user.id
+        session.permanent = True
         return jsonify({
             'success': True,
             'user': {
                 'id': user.id,
                 'username': user.username,
-                'is_admin': user.is_admin
+                'is_admin': user.is_admin,
+                'role': user.role
             }
         })
     except Exception as e:
@@ -126,6 +129,7 @@ def check_status():
                     'user': {
                         'id': user.id,
                         'username': user.username,
+                        'role': user.role,
                         'is_admin': user.is_admin,
                         'attending': user.attending
                     }

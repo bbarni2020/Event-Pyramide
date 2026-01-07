@@ -15,10 +15,12 @@ migrate = Migrate()
 def create_app():
     app = Flask(__name__)
     
-    CORS(app, 
+    CORS(app,
+         origins=['http://localhost:5001', 'http://127.0.0.1:5001'],
          supports_credentials=True,
-         allow_headers=["Content-Type", "Authorization"],
-         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+         allow_headers=["Content-Type", "Authorization", "X-XSRF-TOKEN"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         expose_headers=["Content-Type"])
     
     db_user = os.getenv('DB_USER', 'eventuser')
     db_password = os.getenv('DB_PASSWORD', 'eventpass')
@@ -31,9 +33,11 @@ def create_app():
     )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SESSION_TYPE'] = 'filesystem'
-    app.config['SESSION_PERMANENT'] = False
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_PERMANENT'] = True
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = False
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.secret_key = os.getenv('SESSION_SECRET', 'event-pyramide-secret-key-change-in-production')
     
     db.init_app(app)

@@ -25,9 +25,9 @@ function AppContent() {
           <div className="nav-actions">
             <span className="user-info">
               {user.username}
-              {user.isAdmin && <span className="admin-badge">ADMIN</span>}
+              {user.is_admin && <span className="admin-badge">ADMIN</span>}
             </span>
-            {user.isAdmin && (
+            {user.is_admin && (
               <>
                 <button onClick={() => setCurrentView('dashboard')}>Dashboard</button>
                 <button onClick={() => setCurrentView('admin')}>Admin Panel</button>

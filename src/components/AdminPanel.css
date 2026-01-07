@@ -2,6 +2,29 @@
   color: #888;
 }
 
+.search-input {
+  margin-bottom: 1.5rem;
+  padding: 0.9rem;
+  border: 1px solid #2a2a2a;
+  background: #0a0a0a;
+  color: #888;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  border-radius: 2px;
+  width: 100%;
+  font-family: monospace;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #3a3a3a;
+  background: #0d0d0d;
+}
+
+.search-input::placeholder {
+  color: #444;
+}
+
 .status-bar {
   margin-bottom: 2.5rem;
   padding: 0.6rem 0;
@@ -99,6 +122,21 @@ td {
   padding: 1rem;
   border-top: 1px solid #2a2a2a;
   font-size: 0.85rem;
+}
+
+td select {
+  background: #0f0f0f;
+  color: #aaa;
+  border: 1px solid #2a2a2a;
+  border-radius: 3px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+td select:focus {
+  outline: none;
+  border-color: #4a4a4a;
 }
 
 .alias {

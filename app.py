@@ -6,4 +6,4 @@ load_dotenv()
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=os.getenv('FLASK_ENV') == 'development', port=int(os.getenv('PORT', 5000)))
+    app.run(debug=os.getenv('FLASK_ENV') == 'development', port=int(os.getenv('PORT', 5002)))

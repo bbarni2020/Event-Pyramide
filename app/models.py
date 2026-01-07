@@ -10,6 +10,7 @@ class User(db.Model):
     username = db.Column(db.String(255), nullable=False)
     full_name = db.Column(db.String(255))
     profile_picture = db.Column(db.Text)
+    role = db.Column(db.String(50), default='user')
     is_admin = db.Column(db.Boolean, default=False)
     is_banned = db.Column(db.Boolean, default=False)
     attending = db.Column(db.Boolean, nullable=True)
@@ -27,6 +28,7 @@ class User(db.Model):
             'username': self.username,
             'full_name': self.full_name,
             'profile_picture': self.profile_picture,
+            'role': self.role,
             'is_admin': self.is_admin,
             'is_banned': self.is_banned,
             'attending': self.attending,
@@ -64,34 +66,71 @@ class EventConfig(db.Model):
     event_place = db.Column(db.String(500))
     event_place_lat = db.Column(db.Numeric(10, 8))
     event_place_lng = db.Column(db.Numeric(11, 8))
-    info_public = db.Column(db.Boolean, default=False)
     max_participants = db.Column(db.Integer, nullable=False)
     member_count_release_date = db.Column(db.DateTime, nullable=False)
-    min_ticket_price = db.Column(db.Numeric(10, 2))
-    max_ticket_price = db.Column(db.Numeric(10, 2))
+    ticket_price = db.Column(db.Numeric(10, 2))
     currency = db.Column(db.String(10), default='USD')
     max_invites_per_user = db.Column(db.Integer, default=5)
     max_discount_percent = db.Column(db.Numeric(5, 2), default=Decimal('0.00'))
     current_participants = db.Column(db.Integer, default=0)
+    participants_public = db.Column(db.Boolean, default=False)
+    event_date_public = db.Column(db.Boolean, default=False)
+    event_place_public = db.Column(db.Boolean, default=False)
+    release_date_participants = db.Column(db.DateTime)
+    release_date_event_date = db.Column(db.DateTime)
+    release_date_event_place = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def to_dict(self):
+        # Compute min/max from base price and max discount
+        base = float(self.ticket_price) if self.ticket_price is not None else None
+        max_disc = float(self.max_discount_percent) if self.max_discount_percent is not None else 0.0
+        min_price = None
+        max_price = base
+        if base is not None:
+            min_price = round(base * (1 - max_disc / 100), 2)
         return {
             'id': self.id,
             'event_date': self.event_date.isoformat() if self.event_date else None,
             'event_place': self.event_place,
             'event_place_lat': float(self.event_place_lat) if self.event_place_lat else None,
             'event_place_lng': float(self.event_place_lng) if self.event_place_lng else None,
-            'info_public': self.info_public,
             'max_participants': self.max_participants,
             'member_count_release_date': self.member_count_release_date.isoformat() if self.member_count_release_date else None,
-            'min_ticket_price': float(self.min_ticket_price) if self.min_ticket_price else None,
-            'max_ticket_price': float(self.max_ticket_price) if self.max_ticket_price else None,
+            'min_ticket_price': min_price,
+            'max_ticket_price': max_price,
+            'ticket_price': float(self.ticket_price) if self.ticket_price is not None else None,
             'currency': self.currency,
             'max_invites_per_user': self.max_invites_per_user,
             'max_discount_percent': float(self.max_discount_percent) if self.max_discount_percent else None,
             'current_participants': self.current_participants,
+            'participants_public': self.participants_public,
+            'event_date_public': self.event_date_public,
+            'event_place_public': self.event_place_public,
+            'release_date_participants': self.release_date_participants.isoformat() if self.release_date_participants else None,
+            'release_date_event_date': self.release_date_event_date.isoformat() if self.release_date_event_date else None,
+            'release_date_event_place': self.release_date_event_place.isoformat() if self.release_date_event_place else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+class RoleSalary(db.Model):
+    __tablename__ = 'role_salaries'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    role = db.Column(db.String(50), unique=True, nullable=False)
+    salary = db.Column(db.Numeric(10, 2), default=Decimal('0.00'))
+    currency = db.Column(db.String(10), default='USD')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'role': self.role,
+            'salary': float(self.salary) if self.salary is not None else 0.0,
+            'currency': self.currency,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }

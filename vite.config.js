@@ -7,11 +7,11 @@ export default defineConfig({
     port: 5001,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5002',
         changeOrigin: true
       },
       '/auth': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5002',
         changeOrigin: true
       }
     }
