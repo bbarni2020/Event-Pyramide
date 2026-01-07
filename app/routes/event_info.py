@@ -36,5 +36,6 @@ def get_event_info():
     info['currency'] = config.currency
     info['max_invites_per_user'] = config.max_invites_per_user
     info['max_discount_percent'] = float(config.max_discount_percent) if config.max_discount_percent is not None else None
+    info['ticket_qr_enabled'] = config.ticket_qr_enabled
     
     return jsonify(info)

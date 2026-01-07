@@ -1,14 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { invitationService, authService, eventService } from '../services/api';
+import { invitationService, authService, eventService, adminService } from '../services/api';
+import StaffTab from './roles/StaffTab';
+import TicketInspectorTab from './roles/TicketInspectorTab';
+import BartenderTab from './roles/BartenderTab';
+import SecurityTab from './roles/SecurityTab';
+import TicketInfo from './TicketInfo';
 import './Dashboard.css';
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('home');
   const [invitations, setInvitations] = useState([]);
   const [newInvitation, setNewInvitation] = useState({ instagram_id: '' });
   const [config, setConfig] = useState({ maxInvitesPerUser: 5 });
+  const [salaries, setSalaries] = useState([]);
   const [attending, setAttending] = useState(null);
+  const [userTicket, setUserTicket] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -17,7 +25,23 @@ export default function Dashboard() {
     loadAttendance();
     loadInvitations();
     loadEventInfo();
+    loadSalaries();
+    loadUserTicket();
   }, []);
+
+  const loadUserTicket = async () => {
+    try {
+      const response = await fetch('/api/tickets/', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUserTicket(data);
+      }
+    } catch (err) {
+      console.error('Failed to load user ticket:', err);
+    }
+  };
 
   const loadEventInfo = async () => {
     try {
@@ -30,6 +54,7 @@ export default function Dashboard() {
         maxTicketPrice: data.max_ticket_price ?? null,
         maxInvitesPerUser: data.max_invites_per_user ?? 0,
         maxDiscountPercent: data.max_discount_percent ?? 0,
+        ticketQrEnabled: data.ticket_qr_enabled ?? true
       });
     } catch (err) {
       console.error('Failed to load event info:', err);
@@ -53,6 +78,15 @@ export default function Dashboard() {
       }
     } catch (err) {
       console.error('Failed to load attendance status:', err);
+    }
+  };
+
+  const loadSalaries = async () => {
+    try {
+      const response = await adminService.getSalaries();
+      setSalaries(response.data);
+    } catch (err) {
+      console.error('Failed to load salaries:', err);
     }
   };
 
@@ -140,149 +174,224 @@ export default function Dashboard() {
     ? Math.max(0, maxPrice - effectivePrice)
     : 0;
 
+  const staffSalary = salaries.find(s => s.role === user?.role)?.salary || 0;
+
   const formatMoney = (value) => value == null ? '—' : `${currency} ${Number(value).toFixed(2)}`;
+
+  const getRoleTabs = () => {
+    const tabs = [];
+    
+    if (user?.is_admin) {
+      tabs.push('home');
+    }
+    
+    if (user?.role === 'staff') {
+      tabs.push('staff');
+    } else if (user?.role === 'ticket-inspector') {
+      tabs.push('inspector');
+    } else if (user?.role === 'bartender') {
+      tabs.push('bartender');
+    } else if (user?.role === 'security') {
+      tabs.push('security');
+    }
+    
+    if (!user?.role || user.role === 'user') {
+      tabs.push('home');
+    }
+    
+    return tabs;
+  };
+
+  const tabs = getRoleTabs();
 
   return (
     <div className="dashboard">
       <div className="status-bar">
         <span className="status-item">ALIAS: {user?.username}</span>
+        {user?.role !== 'user' && <span className="status-item">ROLE: {user?.role.toUpperCase()}</span>}
       </div>
 
       {error && <div className="alert error">⚠ {error}</div>}
       {success && <div className="alert success">✓ {success}</div>}
 
-      <div className="grid">
-        <div className="panel">
-          <div className="panel-header">
-            <h3>GRANT ACCESS</h3>
-            <div className="quota">REMAINING: {remainingInvites} / {invitationLimit}</div>
-          </div>
-          
-          <form onSubmit={sendInvitation}>
-            <input
-              type="text"
-              placeholder="INSTAGRAM ID"
-              value={newInvitation.instagram_id}
-              onChange={(e) => setNewInvitation({ instagram_id: e.target.value })}
-              disabled={loading || (!user?.is_admin && invitations.length >= config.maxInvitesPerUser)}
-            />
-            <button 
-              type="submit" 
-              disabled={loading || (!user?.is_admin && invitations.length >= config.maxInvitesPerUser)}
-            >
-              {loading ? 'PROCESSING...' : 'GRANT ACCESS'}
+      {tabs.length > 1 && (
+        <div className="tabs">
+          {tabs.includes('home') && (
+            <button className={`tab ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
+              HOME
             </button>
-          </form>
-
-          <div className="list-section">
-            <div className="list-header">GRANTED ({invitations.length})</div>
-            {invitations.map((invitation) => (
-              <div key={invitation.id} className="list-row">
-                <span className={`indicator indicator-${invitation.status}`}></span>
-                <span className="alias">@{invitation.invitee_username}</span>
-                <span className="status-text">{invitation.status.toUpperCase()}</span>
-                {invitation.status === 'pending' && (
-                  <button 
-                    className="delete-invite-btn"
-                    onClick={() => deleteInvitation(invitation.id)}
-                    disabled={loading}
-                    title="Cancel this invitation"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="panel">
-          {user?.role === 'user' ? (
-            <>
-              <div className="panel-header">
-                <h3>EVENT TICKET</h3>
-              </div>
-              <div className="ticket-info">
-                <div className="price-display">
-                  <div className="price-label">
-                    TICKET PRICE
-                    <button
-                      type="button"
-                      className="info-button"
-                      data-tip="Invite more people; when they accept, your price slides down toward the max discount."
-                      aria-label="Invite more people; when they accept, your price slides down toward the max discount."
-                    >?</button>
-                  </div>
-                  <div className="price-value">{formatMoney(effectivePrice ?? maxPrice)}</div>
-                  <div className="price-subtext">DISCOUNT: {formatMoney(discountAmount)}</div>
-                </div>
-              <div className="attendance-section">
-                <div className="attendance-label">ATTENDANCE</div>
-                <div className="button-group">
-                  <button 
-                    className={`attendance-btn ${attending === true ? 'active' : ''}`}
-                    onClick={() => updateAttendance(true)}
-                  >
-                    ATTENDING
-                  </button>
-                  <button 
-                    className={`attendance-btn ${attending === false ? 'active' : ''}`}
-                    onClick={() => updateAttendance(false)}
-                  >
-                    NOT ATTENDING
-                  </button>
-                </div>
-                {attending !== null && (
-                  <div className={`status-badge ${attending ? 'going' : ''}`}>
-                    {attending ? '✓ You\'re attending' : '✗ Not attending'}
-                  </div>
-                )}
-              </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="panel-header">
-                <h3>STAFF ACCESS</h3>
-              </div>
-              <div className="staff-ticket">
-                <div className="free-ticket">
-                  <div className="ticket-label">YOUR TICKET</div>
-                  <div className="ticket-price">FREE</div>
-                  <div className="ticket-role">{user?.role.toUpperCase()}</div>
-                </div>
-                <div className="revenue-box">
-                  <div className="revenue-label">GUEST PAYS</div>
-                  <div className="revenue-value">{formatMoney(maxPrice)}</div>
-                  <div className="revenue-subtext">Per attendee</div>
-                </div>
-              </div>
-              <div className="attendance-section">
-                <div className="attendance-label">ATTENDANCE</div>
-                <div className="button-group">
-                  <button 
-                    className={`attendance-btn ${attending === true ? 'active' : ''}`}
-                    onClick={() => updateAttendance(true)}
-                  >
-                    ATTENDING
-                  </button>
-                  <button 
-                    className={`attendance-btn ${attending === false ? 'active' : ''}`}
-                    onClick={() => updateAttendance(false)}
-                  >
-                    NOT ATTENDING
-                  </button>
-                </div>
-                {attending !== null && (
-                  <div className={`status-badge ${attending ? 'going' : ''}`}>
-                    {attending ? '✓ You\'re attending' : '✗ Not attending'}
-                  </div>
-                )}
-              </div>
-            </>
+          )}
+          {tabs.includes('staff') && (
+            <button className={`tab ${activeTab === 'staff' ? 'active' : ''}`} onClick={() => setActiveTab('staff')}>
+              INFO
+            </button>
+          )}
+          {tabs.includes('inspector') && (
+            <button className={`tab ${activeTab === 'inspector' ? 'active' : ''}`} onClick={() => setActiveTab('inspector')}>
+              QR INSPECTOR
+            </button>
+          )}
+          {tabs.includes('bartender') && (
+            <button className={`tab ${activeTab === 'bartender' ? 'active' : ''}`} onClick={() => setActiveTab('bartender')}>
+              POS
+            </button>
+          )}
+          {tabs.includes('security') && (
+            <button className={`tab ${activeTab === 'security' ? 'active' : ''}`} onClick={() => setActiveTab('security')}>
+              SECURITY
+            </button>
           )}
         </div>
-      </div>
+      )}
+
+      {activeTab === 'home' && (
+        <div className="grid">
+          <div className="panel">
+            <div className="panel-header">
+              <h3>GRANT ACCESS</h3>
+              <div className="quota">REMAINING: {remainingInvites} / {invitationLimit}</div>
+            </div>
+            
+            <form onSubmit={sendInvitation}>
+              <input
+                type="text"
+                placeholder="INSTAGRAM ID"
+                value={newInvitation.instagram_id}
+                onChange={(e) => setNewInvitation({ instagram_id: e.target.value })}
+                disabled={loading || (!user?.is_admin && invitations.length >= config.maxInvitesPerUser)}
+              />
+              <button 
+                type="submit" 
+                disabled={loading || (!user?.is_admin && invitations.length >= config.maxInvitesPerUser)}
+              >
+                {loading ? 'PROCESSING...' : 'GRANT ACCESS'}
+              </button>
+            </form>
+
+            <div className="list-section">
+              <div className="list-header">GRANTED ({invitations.length})</div>
+              {invitations.map((invitation) => (
+                <div key={invitation.id} className="list-row">
+                  <span className={`indicator indicator-${invitation.status}`}></span>
+                  <span className="alias">@{invitation.invitee_username}</span>
+                  <span className="status-text">{invitation.status.toUpperCase()}</span>
+                  {invitation.status === 'pending' && (
+                    <button 
+                      className="delete-invite-btn"
+                      onClick={() => deleteInvitation(invitation.id)}
+                      disabled={loading}
+                      title="Cancel this invitation"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="panel">
+            {user?.role === 'user' ? (
+              <>
+                <div className="panel-header">
+                  <h3>EVENT TICKET</h3>
+                </div>
+                {config.ticketQrEnabled && <TicketInfo user={user} config={config} />}
+                {!userTicket?.verified && (
+                  <div className="ticket-info">
+                    <div className="price-display">
+                      <div className="price-label">
+                        TICKET PRICE
+                        <button
+                          type="button"
+                          className="info-button"
+                          data-tip="Invite more people; when they accept, your price slides down toward the max discount."
+                          aria-label="Invite more people; when they accept, your price slides down toward the max discount."
+                        >?</button>
+                      </div>
+                      <div className="price-value">{formatMoney(effectivePrice ?? maxPrice)}</div>
+                      <div className="price-subtext">DISCOUNT: {formatMoney(discountAmount)}</div>
+                    </div>
+                    <div className="attendance-section">
+                      <div className="attendance-label">ATTENDANCE</div>
+                      <div className="button-group">
+                        <button 
+                          className={`attendance-btn ${attending === true ? 'active' : ''}`}
+                          onClick={() => updateAttendance(true)}
+                        >
+                          ATTENDING
+                        </button>
+                        <button 
+                          className={`attendance-btn ${attending === false ? 'active' : ''}`}
+                          onClick={() => updateAttendance(false)}
+                        >
+                          NOT ATTENDING
+                        </button>
+                      </div>
+                      {attending !== null && (
+                        <div className={`status-badge ${attending ? 'going' : ''}`}>
+                          {attending ? '✓ You\'re attending' : '✗ Not attending'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {userTicket?.verified && (
+                  <div className="verified-message">
+                    <p>✓ YOUR TICKET HAS BEEN VERIFIED</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="panel-header">
+                  <h3>STAFF ACCESS</h3>
+                </div>
+                {config.ticketQrEnabled && <TicketInfo user={user} config={config} />}
+                <div className="staff-ticket">
+                  <div className="free-ticket">
+                    <div className="ticket-label">YOUR TICKET</div>
+                    <div className="ticket-price">FREE</div>
+                    <div className="ticket-role">{user?.role.toUpperCase()}</div>
+                  </div>
+                  <div className="revenue-box">
+                    <div className="revenue-label">YOUR SALARY</div>
+                    <div className="revenue-value">{formatMoney(staffSalary)}</div>
+                    <div className="revenue-subtext">Per event</div>
+                  </div>
+                </div>
+                <div className="attendance-section">
+                  <div className="attendance-label">ATTENDANCE</div>
+                  <div className="button-group">
+                    <button 
+                      className={`attendance-btn ${attending === true ? 'active' : ''}`}
+                      onClick={() => updateAttendance(true)}
+                    >
+                      ATTENDING
+                    </button>
+                    <button 
+                      className={`attendance-btn ${attending === false ? 'active' : ''}`}
+                      onClick={() => updateAttendance(false)}
+                    >
+                      NOT ATTENDING
+                    </button>
+                  </div>
+                  {attending !== null && (
+                    <div className={`status-badge ${attending ? 'going' : ''}`}>
+                      {attending ? '✓ You\'re attending' : '✗ Not attending'}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'staff' && <StaffTab user={user} />}
+      {activeTab === 'inspector' && <TicketInspectorTab user={user} config={config} />}
+      {activeTab === 'bartender' && <BartenderTab user={user} />}
+      {activeTab === 'security' && <SecurityTab user={user} />}
     </div>
   );
 }

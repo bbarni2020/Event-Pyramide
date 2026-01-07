@@ -79,11 +79,11 @@ class EventConfig(db.Model):
     release_date_participants = db.Column(db.DateTime)
     release_date_event_date = db.Column(db.DateTime)
     release_date_event_place = db.Column(db.DateTime)
+    ticket_qr_enabled = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def to_dict(self):
-        # Compute min/max from base price and max discount
         base = float(self.ticket_price) if self.ticket_price is not None else None
         max_disc = float(self.max_discount_percent) if self.max_discount_percent is not None else 0.0
         min_price = None
@@ -111,6 +111,7 @@ class EventConfig(db.Model):
             'release_date_participants': self.release_date_participants.isoformat() if self.release_date_participants else None,
             'release_date_event_date': self.release_date_event_date.isoformat() if self.release_date_event_date else None,
             'release_date_event_place': self.release_date_event_place.isoformat() if self.release_date_event_place else None,
+            'ticket_qr_enabled': self.ticket_qr_enabled,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -154,3 +155,70 @@ class BotMessage(db.Model):
             'sent_at': self.sent_at.isoformat() if self.sent_at else None,
             'status': self.status,
         }
+
+class Ticket(db.Model):
+    __tablename__ = 'tickets'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    qr_code = db.Column(db.String(255), unique=True, nullable=False)
+    verified = db.Column(db.Boolean, default=False)
+    verified_at = db.Column(db.DateTime)
+    verified_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    status = db.Column(db.String(50), default='active')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    user = db.relationship('User', foreign_keys=[user_id], backref='tickets')
+    inspector = db.relationship('User', foreign_keys=[verified_by])
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'username': self.user.username if self.user else None,
+            'qr_code': self.qr_code,
+            'verified': self.verified,
+            'verified_at': self.verified_at.isoformat() if self.verified_at else None,
+            'verified_by': self.verified_by,
+            'status': self.status,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+class SecurityIncident(db.Model):
+    __tablename__ = 'security_incidents'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    reported_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    incident_type = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    people_needed = db.Column(db.Integer, default=1)
+    people_available = db.Column(db.Integer, default=0)
+    status = db.Column(db.String(50), default='open')
+    assigned_to = db.relationship('User', secondary='security_incident_assignments', backref='assigned_incidents')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    resolved_at = db.Column(db.DateTime)
+    
+    reporter = db.relationship('User', foreign_keys=[reported_by])
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'reported_by': self.reported_by,
+            'reporter_name': self.reporter.username if self.reporter else None,
+            'incident_type': self.incident_type,
+            'description': self.description,
+            'people_needed': self.people_needed,
+            'people_available': self.people_available,
+            'status': self.status,
+            'assigned_count': len(self.assigned_to),
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'resolved_at': self.resolved_at.isoformat() if self.resolved_at else None,
+        }
+
+security_incident_assignments = db.Table(
+    'security_incident_assignments',
+    db.Column('incident_id', db.Integer, db.ForeignKey('security_incidents.id'), primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True)
+)

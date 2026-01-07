@@ -56,6 +56,8 @@ export const adminService = {
   getConfig: () => api.get('/api/admin/config'),
   updateConfig: (data) => api.put('/api/admin/config', data),
   updateUserRole: (userId, role) => api.put(`/api/admin/users/${userId}/role`, { role }),
+  getSalaries: () => api.get('/api/admin/salaries'),
+  updateSalary: (role, salary, currency) => api.put(`/api/admin/salaries/${role}`, { salary, currency }),
   sendUpdate: (data) => api.post('/api/bot/send-update', data),
   broadcast: (data) => api.post('/api/bot/broadcast', data)
 };

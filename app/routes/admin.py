@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy import func
 from app import db
-from app.models import User, Invitation, EventConfig, RoleSalary
+from app.models import User, Invitation, EventConfig, RoleSalary, Ticket
 from app.middleware.auth import require_admin
 from app.services import cache
 from datetime import datetime
@@ -124,7 +124,8 @@ def get_config():
         'releaseDateParticipants': config.release_date_participants.isoformat() if config.release_date_participants else None,
         'releaseDateEventDate': config.release_date_event_date.isoformat() if config.release_date_event_date else None,
         'releaseDateEventPlace': config.release_date_event_place.isoformat() if config.release_date_event_place else None,
-        'currency': config.currency
+        'currency': config.currency,
+        'ticketQrEnabled': config.ticket_qr_enabled
     })
 
 @admin_bp.route('/config', methods=['PUT'])
@@ -180,6 +181,8 @@ def update_config():
         config.release_date_event_date = datetime.fromisoformat(data['releaseDateEventDate'].replace('Z', '+00:00'))
     if 'releaseDateEventPlace' in data and data['releaseDateEventPlace']:
         config.release_date_event_place = datetime.fromisoformat(data['releaseDateEventPlace'].replace('Z', '+00:00'))
+    if 'ticketQrEnabled' in data:
+        config.ticket_qr_enabled = data['ticketQrEnabled']
     
     db.session.add(config)
     db.session.commit()
@@ -214,3 +217,46 @@ def update_salary(role):
     cache.delete('salaries:all')
     
     return jsonify(role_salary.to_dict())
+
+@admin_bp.route('/inspector-payments', methods=['GET'])
+@require_admin
+def get_inspector_payments():
+    """Get payment totals for each ticket inspector"""
+    inspectors = User.query.filter_by(role='ticket-inspector').all()
+    config = EventConfig.query.first()
+    
+    result = []
+    for inspector in inspectors:
+        # Get all verified tickets by this inspector (from regular users only)
+        verified_tickets = Ticket.query.join(User, Ticket.user_id == User.id).filter(
+            Ticket.verified_by == inspector.id,
+            User.role == 'user'
+        ).all()
+        
+        total_collected = 0.0
+        
+        if config and config.ticket_price:
+            base_price = float(config.ticket_price)
+            max_discount_pct = float(config.max_discount_percent) if config.max_discount_percent else 0
+            max_invites = config.max_invites_per_user or 1
+            
+            # Calculate total for each verified ticket
+            for ticket in verified_tickets:
+                accepted_invites = Invitation.query.filter_by(
+                    inviter_id=ticket.user_id,
+                    status='accepted'
+                ).count()
+                
+                discount_fraction = min(accepted_invites / max_invites, 1.0) if max_invites > 0 else 0
+                discount_pct = max_discount_pct * discount_fraction
+                ticket_price = base_price * (1 - discount_pct / 100)
+                total_collected += ticket_price
+        
+        result.append({
+            'inspector_id': inspector.id,
+            'inspector_name': inspector.username,
+            'total_collected': round(total_collected, 2),
+            'verified_count': len(verified_tickets)
+        })
+    
+    return jsonify(result)

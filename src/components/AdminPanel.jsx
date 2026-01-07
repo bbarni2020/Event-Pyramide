@@ -1,17 +1,30 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { adminService } from '../services/api';
 import './AdminPanel.css';
 
 export default function AdminPanel() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [invitations, setInvitations] = useState([]);
   const [config, setConfig] = useState(null);
+  const [salaries, setSalaries] = useState([]);
+  const [inspectorPayments, setInspectorPayments] = useState([]);
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+
+  if (!user?.is_admin) {
+    return (
+      <div className="access-denied">
+        <h2>Access Denied</h2>
+        <p>You do not have permission to access the Admin Panel.</p>
+      </div>
+    );
+  }
 
   useEffect(() => {
     loadData();
@@ -19,15 +32,19 @@ export default function AdminPanel() {
 
   const loadData = async () => {
     try {
-      const [usersRes, invitationsRes, configRes] = await Promise.all([
+      const [usersRes, invitationsRes, configRes, salariesRes, paymentsRes] = await Promise.all([
         adminService.getUsers(),
         adminService.getInvitations(),
-        adminService.getConfig()
+        adminService.getConfig(),
+        adminService.getSalaries(),
+        fetch('/api/admin/inspector-payments', { credentials: 'include' }).then(r => r.json())
       ]);
       
       setUsers(usersRes.data);
       setInvitations(invitationsRes.data);
       setConfig(configRes.data);
+      setSalaries(salariesRes.data);
+      setInspectorPayments(paymentsRes);
     } catch (err) {
       setError('Failed to load data');
       console.error(err);
@@ -102,6 +119,21 @@ export default function AdminPanel() {
     }
   };
 
+  const updateSalary = async (role, salary) => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      await adminService.updateSalary(role, salary, config?.currency || 'USD');
+      await loadData();
+      setSuccess(`Salary for ${role} updated`);
+    } catch (err) {
+      setError('Failed to update salary');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatDate = (date) => {
     return new Date(date).toLocaleString();
   };
@@ -126,6 +158,12 @@ export default function AdminPanel() {
         </button>
         <button className={activeTab === 'config' ? 'active' : ''} onClick={() => setActiveTab('config')}>
           CONFIG
+        </button>
+        <button className={activeTab === 'salaries' ? 'active' : ''} onClick={() => setActiveTab('salaries')}>
+          SALARIES
+        </button>
+        <button className={activeTab === 'payments' ? 'active' : ''} onClick={() => setActiveTab('payments')}>
+          INSPECTOR PAYMENTS
         </button>
         <button className={activeTab === 'broadcast' ? 'active' : ''} onClick={() => setActiveTab('broadcast')}>
           BROADCAST
@@ -414,9 +452,97 @@ export default function AdminPanel() {
               </div>
             </fieldset>
 
+            <fieldset>
+              <legend>TICKET QR CODES</legend>
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    checked={config.ticketQrEnabled || false}
+                    onChange={(e) => setConfig({...config, ticketQrEnabled: e.target.checked})}
+                  />
+                  <span>ENABLE TICKET QR CODES</span>
+                </label>
+                <p className="help-text">Allow users to generate QR codes for ticket verification</p>
+              </div>
+            </fieldset>
+
             <button onClick={updateConfig} disabled={loading} className="submit-btn">
               {loading ? 'APPLYING...' : 'APPLY CHANGES'}
             </button>
+          </div>
+        )}
+
+        {activeTab === 'salaries' && (
+          <div className="salaries-section">
+            <div className="salaries-header">STAFF ROLE SALARIES</div>
+            <div className="salaries-grid">
+              {['staff', 'ticket-inspector', 'security', 'bartender'].map((role) => {
+                const salary = salaries.find(s => s.role === role);
+                const salaryAmount = salary?.salary || 0;
+                return (
+                  <div key={role} className="salary-card">
+                    <div className="salary-role">{role.toUpperCase()}</div>
+                    <div className="salary-input-group">
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={salaryAmount}
+                        onChange={(e) => {
+                          setSalaries(salaries.map(s => 
+                            s.role === role ? {...s, salary: parseFloat(e.target.value) || 0} : s
+                          ));
+                        }}
+                      />
+                      <span className="salary-currency">{config?.currency || 'USD'}</span>
+                    </div>
+                    <button 
+                      onClick={() => updateSalary(role, salaryAmount)}
+                      disabled={loading}
+                      className="save-salary-btn"
+                    >
+                      SAVE
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'payments' && (
+          <div className="payments-section">
+            <div className="payments-header">TICKET INSPECTOR PAYMENTS</div>
+            <div className="payments-table">
+              <div className="payments-row header">
+                <div className="col-name">INSPECTOR</div>
+                <div className="col-amount">TOTAL COLLECTED</div>
+                <div className="col-count">TICKETS VERIFIED</div>
+              </div>
+              {inspectorPayments.length > 0 ? (
+                <>
+                  {inspectorPayments.map((payment) => (
+                    <div key={payment.inspector_id} className="payments-row">
+                      <div className="col-name">{payment.inspector_name.toUpperCase()}</div>
+                      <div className="col-amount">{config?.currency || 'USD'} {payment.total_collected.toFixed(2)}</div>
+                      <div className="col-count">{payment.verified_count}</div>
+                    </div>
+                  ))}
+                  <div className="payments-row header" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '2px solid #3a3a3a' }}>
+                    <div className="col-name">TOTAL</div>
+                    <div className="col-amount">
+                      {config?.currency || 'USD'} {inspectorPayments.reduce((sum, p) => sum + p.total_collected, 0).toFixed(2)}
+                    </div>
+                    <div className="col-count">
+                      {inspectorPayments.reduce((sum, p) => sum + p.verified_count, 0)}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="empty-message">NO TICKET INSPECTORS FOUND</div>
+              )}
+            </div>
           </div>
         )}
 

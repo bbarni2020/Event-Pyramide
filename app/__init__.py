@@ -44,15 +44,19 @@ def create_app():
     migrate.init_app(app, db)
     Session(app)
     
-    from app.models import User, Invitation, EventConfig, BotMessage
+    from app.models import User, Invitation, EventConfig, BotMessage, Ticket, SecurityIncident
     from app.routes import auth_bp, invitations_bp, admin_bp, bot_bp
     from app.routes.event_info import event_info_bp
+    from app.routes.tickets import tickets_bp
+    from app.routes.security import security_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(invitations_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(bot_bp)
     app.register_blueprint(event_info_bp)
+    app.register_blueprint(tickets_bp)
+    app.register_blueprint(security_bp)
     
     @app.route('/')
     def index():
