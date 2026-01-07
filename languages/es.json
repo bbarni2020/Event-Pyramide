@@ -1,0 +1,130 @@
+{
+  "app_title": "Event Pyramide",
+  "app_subtitle": "Sesión Solo por Invitación",
+  "login": {
+    "feature_exclusive": "Acceso Exclusivo",
+    "feature_invites": "Otorga Hasta 5 Alias",
+    "feature_ticket": "Código de Entrada Digital",
+    "username_label": "Usuario de Instagram",
+    "username_placeholder": "usuario",
+    "request_access": "Solicitar Acceso",
+    "verify_code": "Verificar",
+    "back": "← Volver",
+    "code_sent": "Código Enviado a",
+    "verification_code_label": "Código de Verificación",
+    "verification_placeholder": "000000",
+    "enter_username": "Ingresa tu usuario de Instagram",
+    "enter_code": "Ingresa el código de verificación",
+    "send_code_failed": "No se pudo enviar el código",
+    "verification_failed": "Verificación fallida"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "admin": "Admin",
+    "logout": "Cerrar Sesión",
+    "admin_badge": "Admin"
+  },
+  "dashboard": {
+    "tabs": {
+      "grant_access": "Otorgar Acceso",
+      "event_ticket": "Entrada del Evento",
+      "attendance": "Asistencia"
+    },
+    "invitations": {
+      "title": "Otorgar Acceso",
+      "remaining": "Restantes",
+      "instagram_label": "ID de Instagram",
+      "instagram_placeholder": "usuario de instagram",
+      "grant_button": "Otorgar Acceso",
+      "granted_count": "Otorgados",
+      "no_invitations": "Aún no se han enviado invitaciones",
+      "success": "¡Invitación enviada con éxito!",
+      "failed": "No se pudo enviar la invitación",
+      "enter_id": "Ingresa un ID de Instagram",
+      "status_pending": "Pendiente",
+      "status_accepted": "Aceptada",
+      "status_rejected": "Rechazada"
+    },
+    "ticket": {
+      "title": "Entrada del Evento",
+      "no_ticket": "Aún no se ha generado ninguna entrada",
+      "generate_button": "Generar Entrada",
+      "ticket_code": "Código de Entrada",
+      "tier": "Nivel",
+      "price": "Precio",
+      "issued": "Emitida",
+      "generated": "¡Entrada generada!",
+      "failed": "No se pudo generar la entrada"
+    },
+    "attendance": {
+      "title": "Asistencia",
+      "yes": "Sí, asistiré",
+      "no": "No asistiré",
+      "marked_attending": "Te has marcado como asistente",
+      "marked_not_attending": "Te has marcado como no asistente",
+      "failed": "No se pudo actualizar la asistencia"
+    }
+  },
+  "admin": {
+    "tabs": {
+      "users": "Usuarios",
+      "invitations": "Invitaciones",
+      "tickets": "Entradas",
+      "config": "Configuración",
+      "broadcast": "Difusión"
+    },
+    "users": {
+      "title": "Usuarios",
+      "username": "Usuario",
+      "role": "Rol",
+      "status": "Estado",
+      "actions": "Acciones",
+      "role_admin": "Admin",
+      "role_user": "Usuario",
+      "status_banned": "Bloqueado",
+      "status_active": "Activo",
+      "ban": "Bloquear",
+      "unban": "Desbloquear",
+      "user_banned": "Usuario bloqueado",
+      "user_unbanned": "Usuario desbloqueado"
+    },
+    "invitations": {
+      "title": "Invitaciones",
+      "inviter": "Invitador",
+      "invitee": "Invitado",
+      "status": "Estado",
+      "created": "Creada"
+    },
+    "tickets": {
+      "title": "Entradas",
+      "user": "Usuario",
+      "ticket_code": "Código de Entrada",
+      "tier": "Nivel",
+      "price": "Precio",
+      "issued": "Emitida"
+    },
+    "config": {
+      "title": "Configuración del Evento",
+      "event_date": "Fecha del Evento",
+      "max_participants": "Participantes Máximos",
+      "max_invites": "Invitaciones Máximas por Usuario",
+      "ticket_price": "Precio de la Entrada",
+      "save": "Guardar Configuración",
+      "updated": "¡Configuración actualizada!",
+      "failed": "No se pudo actualizar la configuración"
+    },
+    "broadcast": {
+      "title": "Mensaje de Difusión",
+      "message_label": "Mensaje",
+      "message_placeholder": "Ingresa el mensaje...",
+      "send": "Enviar Difusión",
+      "sent": "Difusión enviada a {count} usuarios",
+      "failed": "No se pudo enviar la difusión",
+      "enter_message": "Ingresa un mensaje"
+    }
+  },
+  "messages": {
+    "error": "Error",
+    "success": "Éxito"
+  }
+}

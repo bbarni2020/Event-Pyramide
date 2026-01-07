@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from app import db
-from app.models import User, Invitation, EventConfig, Ticket
+from app.models import User, Invitation, EventConfig
 from app.middleware.auth import require_auth
 from app.services.instagram_bot import InstagramBot
 from app.services import cache

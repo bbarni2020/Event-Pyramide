@@ -1,15 +1,20 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
 
 export const authService = {
-  checkStatus: () => api.get('/auth/status'),
+  checkStatus: () => api.get('/auth/check-status'),
   logout: () => api.post('/auth/logout'),
+  requestOTP: (username) => api.post('/auth/request-otp', { username: username.toLowerCase() }),
+  verifyOTP: (username, otp) => api.post('/auth/verify-otp', { username: username.toLowerCase(), otp }),
   setAttendance: (attending) => api.post('/auth/set-attendance', { attending })
 };
 

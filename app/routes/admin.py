@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy import func
 from app import db
-from app.models import User, Invitation, EventConfig, Ticket
+from app.models import User, Invitation, EventConfig
 from app.middleware.auth import require_admin
 from app.services import cache
 from datetime import datetime
@@ -63,20 +63,6 @@ def get_invitations():
         'accepted_at': inv.accepted_at.isoformat() if inv.accepted_at else None
     } for inv in invitations])
 
-@admin_bp.route('/tickets', methods=['GET'])
-@require_admin
-def get_tickets():
-    tickets = Ticket.query.all()
-    return jsonify([{
-        'id': t.id,
-        'user_id': t.user_id,
-        'username': User.query.get(t.user_id).username if t.user_id else None,
-        'ticket_code': t.ticket_code,
-        'tier': t.tier,
-        'price': float(t.price),
-        'issued_at': t.issued_at.isoformat() if t.issued_at else None
-    } for t in tickets])
-
 @admin_bp.route('/config', methods=['GET'])
 def get_config():
     config = EventConfig.query.first()
@@ -85,8 +71,13 @@ def get_config():
     return jsonify({
         'id': config.id,
         'event_date': config.event_date.isoformat() if config.event_date else None,
+        'event_place': config.event_place,
+        'event_place_lat': float(config.event_place_lat) if config.event_place_lat else None,
+        'event_place_lng': float(config.event_place_lng) if config.event_place_lng else None,
+        'info_public': config.info_public,
         'max_participants': config.max_participants,
-        'ticket_price': float(config.ticket_price) if config.ticket_price else 0,
+        'min_ticket_price': float(config.min_ticket_price) if config.min_ticket_price else None,
+        'max_ticket_price': float(config.max_ticket_price) if config.max_ticket_price else None,
         'max_invites_per_user': config.max_invites_per_user,
         'currency': config.currency
     })
@@ -102,10 +93,20 @@ def update_config():
     
     if 'event_date' in data and data['event_date']:
         config.event_date = datetime.fromisoformat(data['event_date'])
+    if 'event_place' in data:
+        config.event_place = data['event_place']
+    if 'event_place_lat' in data:
+        config.event_place_lat = Decimal(str(data['event_place_lat'])) if data['event_place_lat'] else None
+    if 'event_place_lng' in data:
+        config.event_place_lng = Decimal(str(data['event_place_lng'])) if data['event_place_lng'] else None
+    if 'info_public' in data:
+        config.info_public = data['info_public']
     if 'max_participants' in data:
         config.max_participants = data['max_participants']
-    if 'ticket_price' in data:
-        config.ticket_price = Decimal(str(data['ticket_price']))
+    if 'min_ticket_price' in data:
+        config.min_ticket_price = Decimal(str(data['min_ticket_price'])) if data['min_ticket_price'] else None
+    if 'max_ticket_price' in data:
+        config.max_ticket_price = Decimal(str(data['max_ticket_price'])) if data['max_ticket_price'] else None
     if 'max_invites_per_user' in data:
         config.max_invites_per_user = data['max_invites_per_user']
     if 'currency' in data:

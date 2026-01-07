@@ -4,36 +4,19 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "nodemon server/index.js",
-    "dev:client": "vite",
+    "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "node server/index.js",
     "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "db:migrate": "docker exec event_pyramide_db psql -U eventuser -d eventpyramide -f /docker-entrypoint-initdb.d/migrations.sql"
+    "docker:down": "docker-compose down"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "drizzle-orm": "^0.29.1",
-    "postgres": "^3.4.3",
-    "dotenv": "^16.3.1",
-    "cors": "^2.8.5",
-    "express-session": "^1.17.3",
-    "passport": "^0.7.0",
-    "passport-instagram": "^1.0.0",
-    "bcrypt": "^5.1.1",
-    "axios": "^1.6.2",
-    "connect-pg-simple": "^9.0.1",
-    "redis": "^4.6.10"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "axios": "^1.6.2"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^3.0.1",
-    "svelte": "^4.2.8",
-    "vite": "^5.0.8",
-    "nodemon": "^3.0.2",
-    "concurrently": "^8.2.2",
-    "drizzle-kit": "^0.20.6"
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.0.8"
   }
 }

@@ -1,0 +1,130 @@
+{
+  "app_title": "Event Pyramide",
+  "app_subtitle": "Nur auf Einladung",
+  "login": {
+    "feature_exclusive": "Exklusiver Zugang",
+    "feature_invites": "Bis zu 5 Aliase vergeben",
+    "feature_ticket": "Digitaler Eintrittscode",
+    "username_label": "Instagram Benutzername",
+    "username_placeholder": "benutzername",
+    "request_access": "Zugang anfordern",
+    "verify_code": "Bestätigen",
+    "back": "← Zurück",
+    "code_sent": "Code gesendet an",
+    "verification_code_label": "Bestätigungscode",
+    "verification_placeholder": "000000",
+    "enter_username": "Gib deinen Instagram-Benutzernamen ein",
+    "enter_code": "Gib den Bestätigungscode ein",
+    "send_code_failed": "Code konnte nicht gesendet werden",
+    "verification_failed": "Bestätigung fehlgeschlagen"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "admin": "Admin",
+    "logout": "Abmelden",
+    "admin_badge": "Admin"
+  },
+  "dashboard": {
+    "tabs": {
+      "grant_access": "Zugang gewähren",
+      "event_ticket": "Event Ticket",
+      "attendance": "Teilnahme"
+    },
+    "invitations": {
+      "title": "Zugang gewähren",
+      "remaining": "Verbleibend",
+      "instagram_label": "Instagram ID",
+      "instagram_placeholder": "instagram benutzername",
+      "grant_button": "Zugang gewähren",
+      "granted_count": "Vergeben",
+      "no_invitations": "Noch keine Einladungen verschickt",
+      "success": "Einladung erfolgreich versendet!",
+      "failed": "Einladung konnte nicht versendet werden",
+      "enter_id": "Gib eine Instagram ID ein",
+      "status_pending": "Ausstehend",
+      "status_accepted": "Akzeptiert",
+      "status_rejected": "Abgelehnt"
+    },
+    "ticket": {
+      "title": "Event Ticket",
+      "no_ticket": "Noch kein Ticket generiert",
+      "generate_button": "Ticket generieren",
+      "ticket_code": "Ticket-Code",
+      "tier": "Stufe",
+      "price": "Preis",
+      "issued": "Ausgestellt",
+      "generated": "Ticket generiert!",
+      "failed": "Ticket konnte nicht generiert werden"
+    },
+    "attendance": {
+      "title": "Teilnahme",
+      "yes": "Ja, ich nehme teil",
+      "no": "Nehme nicht teil",
+      "marked_attending": "Du hast dich als teilnehmend markiert",
+      "marked_not_attending": "Du hast dich als nicht teilnehmend markiert",
+      "failed": "Teilnahme konnte nicht aktualisiert werden"
+    }
+  },
+  "admin": {
+    "tabs": {
+      "users": "Benutzer",
+      "invitations": "Einladungen",
+      "tickets": "Tickets",
+      "config": "Konfiguration",
+      "broadcast": "Broadcast"
+    },
+    "users": {
+      "title": "Benutzer",
+      "username": "Benutzername",
+      "role": "Rolle",
+      "status": "Status",
+      "actions": "Aktionen",
+      "role_admin": "Admin",
+      "role_user": "Benutzer",
+      "status_banned": "Gesperrt",
+      "status_active": "Aktiv",
+      "ban": "Sperren",
+      "unban": "Entsperren",
+      "user_banned": "Benutzer gesperrt",
+      "user_unbanned": "Benutzer entsperrt"
+    },
+    "invitations": {
+      "title": "Einladungen",
+      "inviter": "Einladender",
+      "invitee": "Eingeladener",
+      "status": "Status",
+      "created": "Erstellt"
+    },
+    "tickets": {
+      "title": "Tickets",
+      "user": "Benutzer",
+      "ticket_code": "Ticket-Code",
+      "tier": "Stufe",
+      "price": "Preis",
+      "issued": "Ausgestellt"
+    },
+    "config": {
+      "title": "Event Konfiguration",
+      "event_date": "Event Datum",
+      "max_participants": "Max. Teilnehmer",
+      "max_invites": "Max. Einladungen pro Benutzer",
+      "ticket_price": "Ticketpreis",
+      "save": "Konfiguration speichern",
+      "updated": "Konfiguration aktualisiert!",
+      "failed": "Konfiguration konnte nicht aktualisiert werden"
+    },
+    "broadcast": {
+      "title": "Broadcast Nachricht",
+      "message_label": "Nachricht",
+      "message_placeholder": "Nachricht eingeben...",
+      "send": "Broadcast senden",
+      "sent": "Broadcast an {count} Benutzer gesendet",
+      "failed": "Broadcast konnte nicht gesendet werden",
+      "enter_message": "Gib eine Nachricht ein"
+    }
+  },
+  "messages": {
+    "error": "Fehler",
+    "success": "Erfolg"
+  }
+}

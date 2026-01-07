@@ -1,0 +1,272 @@
+.dashboard {
+  padding: 2rem 0;
+}
+
+.status-bar {
+  margin-bottom: 2.5rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid #2a2a2a;
+  border-bottom: 1px solid #2a2a2a;
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: #666;
+}
+
+.alert {
+  padding: 0.7rem 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 2px;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+.alert.error {
+  background: rgba(139, 58, 58, 0.2);
+  border: 1px solid #8b3a3a;
+  color: #ff6b6b;
+}
+
+.alert.success {
+  background: rgba(88, 139, 58, 0.2);
+  border: 1px solid #588b3a;
+  color: #90ee90;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+.panel {
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  border-radius: 3px;
+  padding: 2rem;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  color: #888;
+  font-weight: 700;
+}
+
+.quota {
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  color: #555;
+}
+
+.panel form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+}
+
+.panel input {
+  padding: 0.9rem;
+  border: 1px solid #2a2a2a;
+  border-radius: 2px;
+  font-size: 0.85rem;
+  background: #0a0a0a;
+  color: #888;
+  letter-spacing: 1px;
+  font-family: monospace;
+}
+
+.panel input:focus {
+  outline: none;
+  border-color: #3a3a3a;
+  background: #0d0d0d;
+}
+
+.panel input::placeholder {
+  color: #444;
+  letter-spacing: 1px;
+}
+
+.panel button {
+  padding: 0.9rem;
+  background: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  color: #888;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  border-radius: 2px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.panel button:hover:not(:disabled) {
+  background: #2a2a2a;
+  border-color: #4a4a4a;
+  color: #aaa;
+}
+
+.panel button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.list-section {
+  margin-top: 2rem;
+}
+
+.list-header {
+  padding: 0.7rem;
+  background: rgba(42, 42, 42, 0.3);
+  border: 1px solid #2a2a2a;
+  border-radius: 2px 2px 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: #666;
+}
+
+.list-row {
+  padding: 0.9rem;
+  border: 1px solid #2a2a2a;
+  border-top: none;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+
+.list-row:last-child {
+  border-radius: 0 0 2px 2px;
+}
+
+.indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #444;
+}
+
+.indicator-pending {
+  background: #8b8b3a;
+}
+
+.indicator-accepted {
+  background: #3a8b3a;
+}
+
+.indicator-rejected {
+  background: #8b3a3a;
+}
+
+.alias {
+  color: #888;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+.status-text {
+  margin-left: auto;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  color: #555;
+}
+
+.ticket-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.price-display {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(42, 42, 42, 0.2);
+  border: 1px solid #2a2a2a;
+  border-radius: 2px;
+}
+
+.price-label {
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: #555;
+  margin-bottom: 0.8rem;
+}
+
+.price-value {
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  color: #888;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.attendance-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.attendance-label {
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: #666;
+  text-align: center;
+}
+
+.button-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.attendance-btn {
+  padding: 0.9rem;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  color: #666;
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+.attendance-btn:hover {
+  background: #2a2a2a;
+  border-color: #3a3a3a;
+}
+
+.attendance-btn.active {
+  background: #2a2a2a;
+  border-color: #4a4a4a;
+  color: #aaa;
+}
+
+.status-badge {
+  text-align: center;
+  padding: 0.6rem;
+  background: rgba(139, 58, 58, 0.2);
+  border: 1px solid #8b3a3a;
+  border-radius: 2px;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  color: #ff6b6b;
+}
+
+.status-badge.going {
+  background: rgba(88, 139, 58, 0.2);
+  border-color: #588b3a;
+  color: #90ee90;
+}

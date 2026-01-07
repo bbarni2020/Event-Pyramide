@@ -1,0 +1,130 @@
+{
+  "app_title": "Event Pyramide",
+  "app_subtitle": "Csak Meghívóval",
+  "login": {
+    "feature_exclusive": "Exkluzív Hozzáférés",
+    "feature_invites": "Akár 5 Alias Kiosztása",
+    "feature_ticket": "Digitális Belépőkód",
+    "username_label": "Instagram Felhasználónév",
+    "username_placeholder": "felhasználónév",
+    "request_access": "Hozzáférés Kérése",
+    "verify_code": "Ellenőrzés",
+    "back": "← Vissza",
+    "code_sent": "Kód Elküldve",
+    "verification_code_label": "Ellenőrző Kód",
+    "verification_placeholder": "000000",
+    "enter_username": "Add meg az Instagram felhasználóneved",
+    "enter_code": "Add meg az ellenőrző kódot",
+    "send_code_failed": "Kód küldése sikertelen",
+    "verification_failed": "Ellenőrzés sikertelen"
+  },
+  "nav": {
+    "dashboard": "Vezérlőpult",
+    "admin": "Admin",
+    "logout": "Kijelentkezés",
+    "admin_badge": "Admin"
+  },
+  "dashboard": {
+    "tabs": {
+      "grant_access": "Hozzáférés Adása",
+      "event_ticket": "Esemény Jegy",
+      "attendance": "Részvétel"
+    },
+    "invitations": {
+      "title": "Hozzáférés Adása",
+      "remaining": "Hátralévő",
+      "instagram_label": "Instagram Azonosító",
+      "instagram_placeholder": "instagram felhasználónév",
+      "grant_button": "Hozzáférés Adása",
+      "granted_count": "Kiosztva",
+      "no_invitations": "Még nincsenek meghívók elküldve",
+      "success": "Meghívó sikeresen elküldve!",
+      "failed": "Meghívó küldése sikertelen",
+      "enter_id": "Adj meg egy Instagram azonosítót",
+      "status_pending": "Függőben",
+      "status_accepted": "Elfogadva",
+      "status_rejected": "Elutasítva"
+    },
+    "ticket": {
+      "title": "Esemény Jegy",
+      "no_ticket": "Még nincs generált jegy",
+      "generate_button": "Jegy Generálása",
+      "ticket_code": "Jegykód",
+      "tier": "Szint",
+      "price": "Ár",
+      "issued": "Kiállítva",
+      "generated": "Jegy generálva!",
+      "failed": "Jegy generálása sikertelen"
+    },
+    "attendance": {
+      "title": "Részvétel",
+      "yes": "Igen, részt veszek",
+      "no": "Nem veszek részt",
+      "marked_attending": "Részt vesznek között vagy jelölve",
+      "marked_not_attending": "Nem részt vevők között vagy jelölve",
+      "failed": "Részvétel frissítése sikertelen"
+    }
+  },
+  "admin": {
+    "tabs": {
+      "users": "Felhasználók",
+      "invitations": "Meghívók",
+      "tickets": "Jegyek",
+      "config": "Beállítások",
+      "broadcast": "Közvetítés"
+    },
+    "users": {
+      "title": "Felhasználók",
+      "username": "Felhasználónév",
+      "role": "Szerep",
+      "status": "Státusz",
+      "actions": "Műveletek",
+      "role_admin": "Admin",
+      "role_user": "Felhasználó",
+      "status_banned": "Tiltva",
+      "status_active": "Aktív",
+      "ban": "Tiltás",
+      "unban": "Tiltás Feloldása",
+      "user_banned": "Felhasználó tiltva",
+      "user_unbanned": "Felhasználó tiltása feloldva"
+    },
+    "invitations": {
+      "title": "Meghívók",
+      "inviter": "Meghívó",
+      "invitee": "Meghívott",
+      "status": "Státusz",
+      "created": "Létrehozva"
+    },
+    "tickets": {
+      "title": "Jegyek",
+      "user": "Felhasználó",
+      "ticket_code": "Jegykód",
+      "tier": "Szint",
+      "price": "Ár",
+      "issued": "Kiállítva"
+    },
+    "config": {
+      "title": "Esemény Beállítások",
+      "event_date": "Esemény Dátuma",
+      "max_participants": "Max. Résztvevők",
+      "max_invites": "Max. Meghívók Felhasználónként",
+      "ticket_price": "Jegy Ára",
+      "save": "Beállítások Mentése",
+      "updated": "Beállítások frissítve!",
+      "failed": "Beállítások frissítése sikertelen"
+    },
+    "broadcast": {
+      "title": "Közvetített Üzenet",
+      "message_label": "Üzenet",
+      "message_placeholder": "Írj be egy üzenetet...",
+      "send": "Közvetítés Küldése",
+      "sent": "Közvetítés elküldve {count} felhasználónak",
+      "failed": "Közvetítés küldése sikertelen",
+      "enter_message": "Írj be egy üzenetet"
+    }
+  },
+  "messages": {
+    "error": "Hiba",
+    "success": "Siker"
+  }
+}
