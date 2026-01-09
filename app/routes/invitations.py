@@ -39,7 +39,7 @@ def create_invitation():
     
     invitation_count = db.session.query(func.count(Invitation.id)).filter_by(inviter_id=user_id).scalar()
     config = EventConfig.query.first()
-    max_invitations = float('inf') if user.is_admin else (config.max_invites_per_user if config else 5)
+    max_invitations = float('inf') if user.role == 'admin' else (config.max_invites_per_user if config else 5)
     
     if invitation_count >= max_invitations:
         return jsonify({'error': f'Maximum invitation limit reached'}), 400
@@ -87,7 +87,7 @@ def delete_invitation(invitation_id):
         return jsonify({'error': 'Invitation not found'}), 404
     
     user = User.query.get(user_id)
-    if invitation.inviter_id != user_id and not user.is_admin:
+    if invitation.inviter_id != user_id and user.role != 'admin':
         return jsonify({'error': 'Not authorized to delete this invitation'}), 403
     
     try:

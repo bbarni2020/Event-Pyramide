@@ -1,5 +1,7 @@
-from flask import Blueprint, jsonify
-from app.models import EventConfig
+from flask import Blueprint, jsonify, request
+from app import db
+from app.models import EventConfig, ManagerCall
+from app.middleware.auth import require_auth
 from datetime import datetime
 
 event_info_bp = Blueprint('event_info', __name__, url_prefix='/api/event')
@@ -39,3 +41,18 @@ def get_event_info():
     info['ticket_qr_enabled'] = config.ticket_qr_enabled
     
     return jsonify(info)
+@event_info_bp.route('/call-manager', methods=['POST'])
+@require_auth
+def call_manager():
+    user_id = request.user.id
+    data = request.get_json() or {}
+    
+    call = ManagerCall(
+        user_id=user_id,
+        reason=data.get('reason'),
+        status='open'
+    )
+    db.session.add(call)
+    db.session.commit()
+    
+    return jsonify(call.to_dict()), 201

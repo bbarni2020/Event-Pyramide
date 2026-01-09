@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy import func
 from app import db
-from app.models import User, Invitation, EventConfig, RoleSalary, Ticket
+from app.models import User, Invitation, EventConfig, RoleSalary, Ticket, ManagerCall, SecurityJob
 from app.middleware.auth import require_admin
 from app.services import cache
 from datetime import datetime
@@ -63,7 +63,7 @@ def set_role(user_id):
         return jsonify({'error': 'Invalid role'}), 400
 
     user.role = role
-    user.is_admin = (role in ['admin', 'staff', 'ticket-inspector', 'security', 'bartender'])
+    user.is_admin = (role == 'admin')
     db.session.commit()
     cache.delete('users:all')
 
@@ -260,3 +260,78 @@ def get_inspector_payments():
         })
     
     return jsonify(result)
+
+@admin_bp.route('/manager-calls', methods=['GET'])
+@require_admin
+def get_manager_calls():
+    calls = ManagerCall.query.order_by(ManagerCall.created_at.desc()).all()
+    return jsonify([c.to_dict() for c in calls])
+
+@admin_bp.route('/manager-calls/<int:call_id>/resolve', methods=['POST'])
+@require_admin
+def resolve_manager_call(call_id):
+    call = ManagerCall.query.get(call_id)
+    if not call:
+        return jsonify({'error': 'Call not found'}), 404
+    
+    call.status = 'resolved'
+    call.resolved_at = datetime.utcnow()
+    db.session.commit()
+    
+    return jsonify(call.to_dict())
+
+@admin_bp.route('/security-jobs', methods=['GET'])
+@require_admin
+def get_security_jobs():
+    jobs = SecurityJob.query.order_by(SecurityJob.created_at.desc()).all()
+    return jsonify([j.to_dict() for j in jobs])
+
+@admin_bp.route('/security-jobs', methods=['POST'])
+@require_admin
+def create_security_job():
+    data = request.get_json() or {}
+    
+    job = SecurityJob(
+        title=data.get('title'),
+        description=data.get('description'),
+        required_people=data.get('required_people', 1),
+        status='open'
+    )
+    db.session.add(job)
+    db.session.commit()
+    
+    return jsonify(job.to_dict()), 201
+
+@admin_bp.route('/security-jobs/<int:job_id>', methods=['PUT'])
+@require_admin
+def update_security_job(job_id):
+    job = SecurityJob.query.get(job_id)
+    if not job:
+        return jsonify({'error': 'Job not found'}), 404
+    
+    data = request.get_json() or {}
+    
+    if 'title' in data:
+        job.title = data['title']
+    if 'description' in data:
+        job.description = data['description']
+    if 'required_people' in data:
+        job.required_people = data['required_people']
+    if 'status' in data:
+        job.status = data['status']
+    
+    db.session.commit()
+    
+    return jsonify(job.to_dict())
+
+@admin_bp.route('/security-jobs/<int:job_id>', methods=['DELETE'])
+@require_admin
+def delete_security_job(job_id):
+    job = SecurityJob.query.get(job_id)
+    if not job:
+        return jsonify({'error': 'Job not found'}), 404
+    
+    db.session.delete(job)
+    db.session.commit()
+    
+    return jsonify({'success': True})

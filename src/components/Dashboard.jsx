@@ -27,7 +27,12 @@ export default function Dashboard() {
     loadEventInfo();
     loadSalaries();
     loadUserTicket();
-  }, []);
+    
+    const tabs = getRoleTabs();
+    if (tabs.length > 0 && !tabs.includes(activeTab)) {
+      setActiveTab(tabs[0]);
+    }
+  }, [user?.role]);
 
   const loadUserTicket = async () => {
     try {
@@ -145,8 +150,8 @@ export default function Dashboard() {
   };
 
   const acceptedInvites = invitations.filter((inv) => inv.status === 'accepted').length;
-  const invitationLimit = user?.is_admin ? '∞' : config.maxInvitesPerUser;
-  const remainingInvites = user?.is_admin
+  const invitationLimit = user?.role === 'admin' ? '∞' : config.maxInvitesPerUser;
+  const remainingInvites = user?.role === 'admin'
     ? '∞'
     : Math.max(0, config.maxInvitesPerUser - invitations.length);
 
@@ -178,12 +183,41 @@ export default function Dashboard() {
 
   const formatMoney = (value) => value == null ? '—' : `${currency} ${Number(value).toFixed(2)}`;
 
-  const getRoleTabs = () => {
-    const tabs = [];
-    
-    if (user?.is_admin) {
-      tabs.push('home');
+  const callManager = async (reasonParam) => {
+    const confirmed = window.confirm('Are you sure you want to call a manager?');
+    if (!confirmed) return;
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const reason = typeof reasonParam === 'string' ? reasonParam : '';
+      const response = await fetch('/api/event/call-manager', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ reason: reason || null })
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (response.ok) {
+        setSuccess('Manager called!');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError('Failed to call manager');
+      }
+    } catch (err) {
+      console.error('Manager call error:', err);
+      setError('Network error calling manager');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const getRoleTabs = () => {
+    const tabs = ['home'];
     
     if (user?.role === 'staff') {
       tabs.push('staff');
@@ -193,10 +227,6 @@ export default function Dashboard() {
       tabs.push('bartender');
     } else if (user?.role === 'security') {
       tabs.push('security');
-    }
-    
-    if (!user?.role || user.role === 'user') {
-      tabs.push('home');
     }
     
     return tabs;
@@ -214,7 +244,7 @@ export default function Dashboard() {
       {error && <div className="alert error">⚠ {error}</div>}
       {success && <div className="alert success">✓ {success}</div>}
 
-      {tabs.length > 1 && (
+      {tabs.length > 0 && (
         <div className="tabs">
           {tabs.includes('home') && (
             <button className={`tab ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
@@ -258,11 +288,11 @@ export default function Dashboard() {
                 placeholder="INSTAGRAM ID"
                 value={newInvitation.instagram_id}
                 onChange={(e) => setNewInvitation({ instagram_id: e.target.value })}
-                disabled={loading || (!user?.is_admin && invitations.length >= config.maxInvitesPerUser)}
+                disabled={loading || (user?.role !== 'admin' && invitations.length >= config.maxInvitesPerUser)}
               />
               <button 
                 type="submit" 
-                disabled={loading || (!user?.is_admin && invitations.length >= config.maxInvitesPerUser)}
+                disabled={loading || (user?.role !== 'admin' && invitations.length >= config.maxInvitesPerUser)}
               >
                 {loading ? 'PROCESSING...' : 'GRANT ACCESS'}
               </button>
@@ -341,6 +371,13 @@ export default function Dashboard() {
                     <p>✓ YOUR TICKET HAS BEEN VERIFIED</p>
                   </div>
                 )}
+                <button 
+                  className="call-manager-btn"
+                  onClick={() => callManager()}
+                  disabled={loading}
+                >
+                  {loading ? 'CALLING...' : 'CALL MANAGER'}
+                </button>
               </>
             ) : (
               <>
@@ -388,10 +425,10 @@ export default function Dashboard() {
         </div>
       )}
 
-      {activeTab === 'staff' && <StaffTab user={user} />}
-      {activeTab === 'inspector' && <TicketInspectorTab user={user} config={config} />}
-      {activeTab === 'bartender' && <BartenderTab user={user} />}
-      {activeTab === 'security' && <SecurityTab user={user} />}
+      {activeTab === 'staff' && <StaffTab user={user} onCallManager={callManager} />}
+      {activeTab === 'inspector' && <TicketInspectorTab user={user} config={config} onCallManager={callManager} />}
+      {activeTab === 'bartender' && <BartenderTab user={user} onCallManager={callManager} />}
+      {activeTab === 'security' && <SecurityTab user={user} onCallManager={callManager} />}
     </div>
   );
 }

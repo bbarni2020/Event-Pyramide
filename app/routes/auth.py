@@ -71,13 +71,13 @@ def verify_otp():
         
         del otp_store[username]
         
+        admin_usernames = os.getenv('ADMIN_INSTAGRAM_USERNAMES', '').split(',')
+        admin_usernames = [u.strip().lower() for u in admin_usernames if u.strip()]
+        is_admin = username in admin_usernames
+        
         user = User.query.filter_by(username=username).first()
         
         if not user:
-            admin_usernames = os.getenv('ADMIN_INSTAGRAM_USERNAMES', '').split(',')
-            admin_usernames = [u.strip().lower() for u in admin_usernames if u.strip()]
-            is_admin = username in admin_usernames
-            
             invitation = Invitation.query.filter_by(invitee_username=username).first()
             
             if not is_admin and not invitation:
@@ -97,6 +97,11 @@ def verify_otp():
                 invitation.accepted_at = datetime.utcnow()
                 db.session.commit()
         else:
+            if is_admin:
+                user.role = 'admin'
+                user.is_admin = True
+                db.session.commit()
+            
             invitation = Invitation.query.filter_by(invitee_username=username).first()
             if invitation and invitation.status == 'pending':
                 invitation.status = 'accepted'

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export default function SecurityTab({ user }) {
+export default function SecurityTab({ user, onCallManager }) {
   const [incidents, setIncidents] = useState([]);
   const [newIncident, setNewIncident] = useState({
     incident_type: '',
@@ -19,7 +19,7 @@ export default function SecurityTab({ user }) {
 
   const loadIncidents = async () => {
     try {
-      const response = await fetch('/api/security/incidents?limit=20', {
+      const response = await fetch('/api/security/incidents?limit=50', {
         credentials: 'include'
       });
       if (response.ok) {
@@ -81,54 +81,85 @@ export default function SecurityTab({ user }) {
     }
   };
 
-  const updatePeopleAvailable = async (incidentId, count) => {
+  const selfAssignIncident = async (incidentId) => {
     try {
-      const response = await fetch(`/api/security/incidents/${incidentId}/people-available`, {
-        method: 'PUT',
+      const response = await fetch(`/api/security/incidents/${incidentId}/self-assign`, {
+        method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ people_available: count })
+        headers: { 'Content-Type': 'application/json' }
       });
 
       if (response.ok) {
+        setSuccess('You have been assigned');
         await loadIncidents();
+      } else {
+        setError('Failed to assign yourself');
       }
     } catch (err) {
-      console.error('Failed to update people available:', err);
+      console.error('Failed to self-assign:', err);
+      setError('Error assigning yourself');
     }
   };
 
-  const canHandle = (incident) => {
-    return incident.people_available >= incident.people_needed;
+  const selfUnassignIncident = async (incidentId) => {
+    try {
+      const response = await fetch(`/api/security/incidents/${incidentId}/self-unassign`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        setSuccess('You have been unassigned');
+        await loadIncidents();
+      } else {
+        setError('Failed to unassign yourself');
+      }
+    } catch (err) {
+      console.error('Failed to self-unassign:', err);
+      setError('Error unassigning yourself');
+    }
   };
 
   return (
-    <div className="security-tab">
+    <div className="grid">
+      {error && <div className="alert error">⚠ {error}</div>}
+      {success && <div className="alert success">✓ {success}</div>}
+
       <div className="panel">
         <div className="panel-header">
           <h3>REPORT INCIDENT</h3>
         </div>
 
-        {error && <div className="alert error">⚠ {error}</div>}
-        {success && <div className="alert success">✓ {success}</div>}
-
         <form onSubmit={createIncident}>
           <input
             type="text"
-            placeholder="Incident type (e.g., Medical, Crowd Control)"
+            placeholder="Incident Type"
             value={newIncident.incident_type}
             onChange={(e) => setNewIncident({ ...newIncident, incident_type: e.target.value })}
             disabled={loading}
+            required
           />
           <textarea
             placeholder="Description"
             value={newIncident.description}
             onChange={(e) => setNewIncident({ ...newIncident, description: e.target.value })}
             disabled={loading}
-            rows="3"
-          ></textarea>
-          <div className="form-row">
-            <label>People Needed:</label>
+            rows="2"
+            style={{
+              padding: '0.9rem',
+              border: '1px solid #2a2a2a',
+              borderRadius: '2px',
+              fontSize: '0.85rem',
+              background: '#0a0a0a',
+              color: '#888',
+              letterSpacing: '1px',
+              fontFamily: 'monospace',
+              resize: 'vertical'
+            }}
+          />
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <label style={{ fontSize: '0.85rem', color: '#888' }}>PEOPLE NEEDED:</label>
             <input
               type="number"
               min="1"
@@ -136,9 +167,10 @@ export default function SecurityTab({ user }) {
               value={newIncident.people_needed}
               onChange={(e) => setNewIncident({ ...newIncident, people_needed: parseInt(e.target.value) })}
               disabled={loading}
+              style={{ width: '80px', padding: '0.9rem' }}
             />
           </div>
-          <button type="submit" disabled={loading} className="button primary">
+          <button type="submit" disabled={loading}>
             {loading ? 'REPORTING...' : 'REPORT INCIDENT'}
           </button>
         </form>
@@ -149,50 +181,74 @@ export default function SecurityTab({ user }) {
           <h3>ACTIVE INCIDENTS</h3>
         </div>
 
-        <div className="incidents-list">
+        <div className="list-section">
           {incidents.filter(i => i.status === 'open').length === 0 ? (
-            <p className="empty-state">No active incidents</p>
+            <p style={{ textAlign: 'center', color: '#555', fontSize: '0.8rem', padding: '1rem' }}>No active incidents</p>
           ) : (
             incidents.filter(i => i.status === 'open').map((incident) => (
-              <div key={incident.id} className={`incident-card ${canHandle(incident) ? 'handleable' : 'critical'}`}>
-                <div className="incident-header">
-                  <h4>{incident.incident_type}</h4>
-                  <span className={`ticker ${canHandle(incident) ? 'ok' : 'alert'}`}>
-                    {incident.people_available} / {incident.people_needed}
-                  </span>
+              <div key={incident.id} className="list-row">
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, marginBottom: '0.3rem' }}>{incident.incident_type}</div>
+                  {incident.description && (
+                    <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.3rem' }}>{incident.description}</div>
+                  )}
+                  <div style={{ fontSize: '0.7rem', color: '#555' }}>
+                    {incident.assigned_count}/{incident.people_needed} ASSIGNED
+                  </div>
                 </div>
-
-                {incident.description && (
-                  <p className="incident-description">{incident.description}</p>
-                )}
-
-                <div className="incident-info">
-                  <span>Reported by: {incident.reporter_name}</span>
-                  <time>{new Date(incident.created_at).toLocaleTimeString()}</time>
-                </div>
-
-                <div className="incident-controls">
-                  <input
-                    type="number"
-                    min="0"
-                    max="50"
-                    value={incident.people_available}
-                    onChange={(e) => updatePeopleAvailable(incident.id, parseInt(e.target.value))}
-                    className="people-input"
-                    title="People available to handle"
-                  />
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => incident.assigned_count > 0 ? selfUnassignIncident(incident.id) : selfAssignIncident(incident.id)}
+                    disabled={loading}
+                    style={{
+                      padding: '0.6rem 0.9rem',
+                      fontSize: '0.7rem',
+                      background: incident.assigned_count > 0 ? '#1a2a1a' : '#1a1a1a',
+                      border: `1px solid ${incident.assigned_count > 0 ? '#3a5a3a' : '#3a3a3a'}`,
+                      color: incident.assigned_count > 0 ? '#7ae87a' : '#888',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      borderRadius: '2px',
+                      fontWeight: 600,
+                      letterSpacing: '1px',
+                      transition: 'all 0.2s',
+                      opacity: loading ? 0.5 : 1
+                    }}
+                  >
+                    {incident.assigned_count > 0 ? 'UNASSIGN' : 'ASSIGN'}
+                  </button>
                   <button
                     onClick={() => updateIncidentStatus(incident.id, 'resolved')}
-                    className="button small"
-                    disabled={!canHandle(incident)}
+                    disabled={incident.assigned_count < incident.people_needed || loading}
+                    style={{
+                      padding: '0.6rem 0.9rem',
+                      fontSize: '0.7rem',
+                      background: incident.assigned_count >= incident.people_needed ? '#1a2a1a' : '#1a1a1a',
+                      border: `1px solid ${incident.assigned_count >= incident.people_needed ? '#3a5a3a' : '#3a3a3a'}`,
+                      color: incident.assigned_count >= incident.people_needed ? '#7ae87a' : '#666',
+                      cursor: incident.assigned_count >= incident.people_needed && !loading ? 'pointer' : 'not-allowed',
+                      borderRadius: '2px',
+                      fontWeight: 600,
+                      letterSpacing: '1px',
+                      opacity: incident.assigned_count >= incident.people_needed && !loading ? 1 : 0.5,
+                      transition: 'all 0.2s'
+                    }}
                   >
-                    RESOLVE
+                    {incident.assigned_count >= incident.people_needed ? 'RESOLVE' : 'WAITING'}
                   </button>
                 </div>
               </div>
             ))
           )}
         </div>
+      </div>
+
+      <div className="panel" style={{ gridColumn: '1 / -1' }}>
+        <button 
+          onClick={onCallManager}
+          style={{ width: '100%', padding: '0.9rem' }}
+        >
+          CALL MANAGER
+        </button>
       </div>
     </div>
   );

@@ -551,3 +551,237 @@ legend {
   font-size: 0.8rem;
   letter-spacing: 1px;
 }
+
+/* ===== SECURITY JOBS SECTION ===== */
+.security-jobs-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.section-header {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e74c3c;
+  margin-bottom: 1.5rem;
+}
+
+.job-form {
+  display: grid;
+  grid-template-columns: 1fr 2fr 100px auto;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.job-form input,
+.job-form textarea {
+  padding: 0.75rem;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  color: #888;
+  font-size: 0.85rem;
+  font-family: monospace;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+.job-form input:focus,
+.job-form textarea:focus {
+  outline: none;
+  border-color: #3a3a3a;
+  background: #0d0d0d;
+  color: #bbb;
+}
+
+.job-form input::placeholder,
+.job-form textarea::placeholder {
+  color: #444;
+  font-size: 0.8rem;
+}
+
+.submit-btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  border: none;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.3s;
+  align-self: center;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f55443, #d43e32);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jobs-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.job-item {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-left: 4px solid #e74c3c;
+  border-radius: 4px;
+  padding: 1.5rem;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.job-item:hover {
+  border-color: #e74c3c;
+  background: #1d1d1d;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
+  transform: translateY(-2px);
+}
+
+.job-item.job-open {
+  border-left-color: #e74c3c;
+}
+
+.job-item.job-resolved {
+  border-left-color: #27ae60;
+  opacity: 0.7;
+}
+
+.job-item.job-in_progress {
+  border-left-color: #f39c12;
+}
+
+.job-header {
+  flex: 1;
+}
+
+.job-header h4 {
+  margin: 0 0 0.5rem;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.job-header > div:first-child h4 {
+  margin-bottom: 0.25rem;
+}
+
+.job-desc {
+  margin: 0;
+  color: #888;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-family: monospace;
+}
+
+.job-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: #0d0d0d;
+  border-radius: 2px;
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.job-stats span {
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 2px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.status-open {
+  background: rgba(231, 76, 60, 0.2);
+  color: #ff7f7f;
+}
+
+.status-badge.status-resolved {
+  background: rgba(39, 174, 96, 0.2);
+  color: #2ecc71;
+}
+
+.status-badge.status-in_progress {
+  background: rgba(243, 156, 18, 0.2);
+  color: #f39c12;
+}
+
+.delete-btn {
+  padding: 0.5rem 1rem;
+  background: #3a1a1a;
+  border: 1px solid #5a2a2a;
+  color: #ff7f7f;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+  font-family: monospace;
+}
+
+.delete-btn:hover:not(:disabled) {
+  background: #5a1a1a;
+  border-color: #8a3a3a;
+  color: #fff;
+}
+
+.delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #666;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 768px) {
+  .job-form {
+    grid-template-columns: 1fr;
+  }
+  
+  .jobs-list {
+    grid-template-columns: 1fr;
+  }
+
+  .job-stats {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+}

@@ -13,11 +13,16 @@ export default function AdminPanel() {
   const [salaries, setSalaries] = useState([]);
   const [inspectorPayments, setInspectorPayments] = useState([]);
   const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [managerCalls, setManagerCalls] = useState([]);
+  const [securityJobs, setSecurityJobs] = useState([]);
+  const [newJobTitle, setNewJobTitle] = useState('');
+  const [newJobDescription, setNewJobDescription] = useState('');
+  const [newJobPeople, setNewJobPeople] = useState(1);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
 
-  if (!user?.is_admin) {
+  if (user?.role !== 'admin') {
     return (
       <div className="access-denied">
         <h2>Access Denied</h2>
@@ -32,12 +37,14 @@ export default function AdminPanel() {
 
   const loadData = async () => {
     try {
-      const [usersRes, invitationsRes, configRes, salariesRes, paymentsRes] = await Promise.all([
+      const [usersRes, invitationsRes, configRes, salariesRes, paymentsRes, callsRes, jobsRes] = await Promise.all([
         adminService.getUsers(),
         adminService.getInvitations(),
         adminService.getConfig(),
         adminService.getSalaries(),
-        fetch('/api/admin/inspector-payments', { credentials: 'include' }).then(r => r.json())
+        fetch('/api/admin/inspector-payments', { credentials: 'include' }).then(r => r.json()),
+        fetch('/api/admin/manager-calls', { credentials: 'include' }).then(r => r.json()),
+        fetch('/api/admin/security-jobs', { credentials: 'include' }).then(r => r.json())
       ]);
       
       setUsers(usersRes.data);
@@ -45,6 +52,8 @@ export default function AdminPanel() {
       setConfig(configRes.data);
       setSalaries(salariesRes.data);
       setInspectorPayments(paymentsRes);
+      setManagerCalls(callsRes);
+      setSecurityJobs(jobsRes);
     } catch (err) {
       setError('Failed to load data');
       console.error(err);
@@ -134,6 +143,67 @@ export default function AdminPanel() {
     }
   };
 
+  const createSecurityJob = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      await fetch('/api/admin/security-jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: newJobTitle,
+          description: newJobDescription,
+          required_people: parseInt(newJobPeople)
+        })
+      });
+      setNewJobTitle('');
+      setNewJobDescription('');
+      setNewJobPeople(1);
+      await loadData();
+      setSuccess('Security job created');
+    } catch (err) {
+      setError('Failed to create job');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteSecurityJob = async (jobId) => {
+    if (!confirm('Are you sure you want to delete this job?')) return;
+    setLoading(true);
+    try {
+      await fetch(`/api/admin/security-jobs/${jobId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      await loadData();
+      setSuccess('Job deleted');
+    } catch (err) {
+      setError('Failed to delete job');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resolveManagerCall = async (callId) => {
+    setLoading(true);
+    try {
+      await fetch(`/api/admin/manager-calls/${callId}/resolve`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      await loadData();
+      setSuccess('Manager call resolved');
+    } catch (err) {
+      setError('Failed to resolve call');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatDate = (date) => {
     return new Date(date).toLocaleString();
   };
@@ -167,6 +237,12 @@ export default function AdminPanel() {
         </button>
         <button className={activeTab === 'broadcast' ? 'active' : ''} onClick={() => setActiveTab('broadcast')}>
           BROADCAST
+        </button>
+        <button className={activeTab === 'manager-calls' ? 'active' : ''} onClick={() => setActiveTab('manager-calls')}>
+          MANAGER CALLS ({managerCalls.length})
+        </button>
+        <button className={activeTab === 'security-jobs' ? 'active' : ''} onClick={() => setActiveTab('security-jobs')}>
+          SECURITY JOBS ({securityJobs.length})
         </button>
       </div>
 
@@ -204,7 +280,7 @@ export default function AdminPanel() {
                     <td className="monospace">{user.instagram_id}</td>
                     <td>
                       <select
-                        value={user.role || (user.is_admin ? 'admin' : 'user')}
+                        value={user.role || 'user'}
                         onChange={(e) => updateUserRole(user.id, e.target.value)}
                         disabled={loading}
                       >
@@ -560,7 +636,100 @@ export default function AdminPanel() {
             </button>
           </div>
         )}
-      </div>
+
+        {activeTab === 'manager-calls' && (
+          <div className="manager-calls-section">
+            <div className="section-header">MANAGER CALLS</div>
+            {managerCalls.length === 0 ? (
+              <p className="empty-state">No manager calls</p>
+            ) : (
+              <div className="calls-list">
+                {managerCalls.map((call) => (
+                  <div key={call.id} className={`call-item call-${call.status}`}>
+                    <div className="call-header">
+                      <span className="username">@{call.username}</span>
+                      <span className={`status-badge status-${call.status}`}>{call.status.toUpperCase()}</span>
+                    </div>
+                    <div className="call-body">
+                      <p className="call-reason">{call.reason || '(No reason specified)'}</p>
+                      <p className="call-time">{formatDate(call.created_at)}</p>
+                    </div>
+                    {call.status === 'open' && (
+                      <button 
+                        className="resolve-btn"
+                        onClick={() => resolveManagerCall(call.id)}
+                        disabled={loading}
+                      >
+                        MARK RESOLVED
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'security-jobs' && (
+          <div className="security-jobs-section">
+            <div className="section-header">SECURITY JOBS</div>
+            
+            <form onSubmit={createSecurityJob} className="job-form">
+              <input 
+                type="text"
+                placeholder="JOB TITLE"
+                value={newJobTitle}
+                onChange={(e) => setNewJobTitle(e.target.value)}
+                required
+              />
+              <textarea
+                placeholder="JOB DESCRIPTION"
+                value={newJobDescription}
+                onChange={(e) => setNewJobDescription(e.target.value)}
+                rows="3"
+              />
+              <input
+                type="number"
+                placeholder="PEOPLE NEEDED"
+                value={newJobPeople}
+                onChange={(e) => setNewJobPeople(e.target.value)}
+                min="1"
+                required
+              />
+              <button type="submit" disabled={loading} className="submit-btn">
+                {loading ? 'CREATING...' : 'CREATE JOB'}
+              </button>
+            </form>
+
+            <div className="jobs-list">
+              {securityJobs.length === 0 ? (
+                <p className="empty-state">No security jobs</p>
+              ) : (
+                securityJobs.map((job) => (
+                  <div key={job.id} className={`job-item job-${job.status}`}>
+                    <div className="job-header">
+                      <div>
+                        <h4>{job.title}</h4>
+                        <p className="job-desc">{job.description}</p>
+                      </div>
+                      <div className="job-stats">
+                        <span>{job.assigned_count}/{job.required_people} ASSIGNED</span>
+                        <span className={`status-badge status-${job.status}`}>{job.status.toUpperCase()}</span>
+                      </div>
+                    </div>
+                    <button 
+                      className="delete-btn"
+                      onClick={() => deleteSecurityJob(job.id)}
+                      disabled={loading}
+                    >
+                      DELETE
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}      </div>
     </div>
   );
 }

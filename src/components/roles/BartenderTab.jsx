@@ -1,4 +1,4 @@
-export default function BartenderTab({ user }) {
+export default function BartenderTab({ user, onCallManager }) {
   return (
     <div className="bartender-tab">
       <div className="panel">
@@ -10,6 +10,9 @@ export default function BartenderTab({ user }) {
           <h2>Coming Soon</h2>
           <p>Cashier panel under development</p>
         </div>
+        <button onClick={onCallManager} className="call-manager-btn" style={{ marginTop: '1rem' }}>
+          CALL MANAGER
+        </button>
       </div>
     </div>
   );

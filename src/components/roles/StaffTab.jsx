@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export default function StaffTab({ user }) {
+export default function StaffTab({ user, onCallManager }) {
   const [attending, setAttending] = useState(null);
 
   return (
@@ -15,6 +15,9 @@ export default function StaffTab({ user }) {
             Open Instagram Messages
           </a>
         </div>
+        <button onClick={onCallManager} className="call-manager-btn" style={{ marginTop: '1rem' }}>
+          CALL MANAGER
+        </button>
       </div>
     </div>
   );

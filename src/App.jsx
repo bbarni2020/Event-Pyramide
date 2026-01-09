@@ -25,13 +25,11 @@ function AppContent() {
           <div className="nav-actions">
             <span className="user-info">
               {user.username}
-              {user.is_admin && <span className="admin-badge">ADMIN</span>}
+              {user.role === 'admin' && <span className="admin-badge">ADMIN</span>}
             </span>
-            {user.is_admin && (
-              <>
-                <button onClick={() => setCurrentView('dashboard')}>Dashboard</button>
-                <button onClick={() => setCurrentView('admin')}>Admin Panel</button>
-              </>
+            <button onClick={() => setCurrentView('dashboard')}>Dashboard</button>
+            {user.role === 'admin' && (
+              <button onClick={() => setCurrentView('admin')}>Admin Panel</button>
             )}
             <button onClick={logout}>Logout</button>
           </div>

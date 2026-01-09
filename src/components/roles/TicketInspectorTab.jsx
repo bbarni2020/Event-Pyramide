@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import jsQR from 'jsqr';
 
-export default function TicketInspectorTab({ user, config }) {
+export default function TicketInspectorTab({ user, config, onCallManager }) {
   const [activeMode, setActiveMode] = useState('scanner');
   const [scannerActive, setScannerActive] = useState(false);
   const [lastResult, setLastResult] = useState(null);
@@ -364,6 +364,9 @@ export default function TicketInspectorTab({ user, config }) {
           )}
           
           <time className="timestamp">{lastResult.timestamp.toLocaleTimeString()}</time>
+          <button onClick={onCallManager} className="call-manager-btn" style={{ marginTop: '1rem' }}>
+            CALL MANAGER
+          </button>
         </div>
       )}
     </div>
