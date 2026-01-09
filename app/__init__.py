@@ -49,6 +49,7 @@ def create_app():
     from app.routes.event_info import event_info_bp
     from app.routes.tickets import tickets_bp
     from app.routes.security import security_bp
+    from app.routes.bar import bar_bp, admin_bar_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(invitations_bp)
@@ -57,6 +58,8 @@ def create_app():
     app.register_blueprint(event_info_bp)
     app.register_blueprint(tickets_bp)
     app.register_blueprint(security_bp)
+    app.register_blueprint(bar_bp)
+    app.register_blueprint(admin_bar_bp)
     
     @app.route('/')
     def index():

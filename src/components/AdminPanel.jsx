@@ -18,6 +18,19 @@ export default function AdminPanel() {
   const [newJobTitle, setNewJobTitle] = useState('');
   const [newJobDescription, setNewJobDescription] = useState('');
   const [newJobPeople, setNewJobPeople] = useState(1);
+  
+  const [barItems, setBarItems] = useState([]);
+  const [inviteDiscounts, setInviteDiscounts] = useState([]);
+  const [presetDiscounts, setPresetDiscounts] = useState([]);
+  const [newItem, setNewItem] = useState({ name: '', price: '', category: 'Drink' });
+  const [newInviteDiscount, setNewInviteDiscount] = useState({ invites: '', discount: '' });
+  const [newPresetUser, setNewPresetUser] = useState({ username: '', discount: '' });
+  
+  const [inventory, setInventory] = useState([]);
+  const [inventoryUpdates, setInventoryUpdates] = useState({});
+  const [currency, setCurrency] = useState('HUF');
+  const [bartenderBalances, setBartenderBalances] = useState([]);
+  
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -33,18 +46,26 @@ export default function AdminPanel() {
 
   useEffect(() => {
     loadData();
+    setCurrency(import.meta.env.VITE_CURRENCY || 'HUF');
+    const interval = setInterval(loadData, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
     try {
-      const [usersRes, invitationsRes, configRes, salariesRes, paymentsRes, callsRes, jobsRes] = await Promise.all([
+      const [usersRes, invitationsRes, configRes, salariesRes, paymentsRes, callsRes, jobsRes, itemsRes, inviteDiscsRes, presetDiscsRes, inventoryRes, balancesRes] = await Promise.all([
         adminService.getUsers(),
         adminService.getInvitations(),
         adminService.getConfig(),
         adminService.getSalaries(),
         fetch('/api/admin/inspector-payments', { credentials: 'include' }).then(r => r.json()),
         fetch('/api/admin/manager-calls', { credentials: 'include' }).then(r => r.json()),
-        fetch('/api/admin/security-jobs', { credentials: 'include' }).then(r => r.json())
+        fetch('/api/admin/security-jobs', { credentials: 'include' }).then(r => r.json()),
+        fetch('/api/admin/bar-items', { credentials: 'include' }).then(r => r.json().catch(() => [])),
+        fetch('/api/admin/invite-discounts', { credentials: 'include' }).then(r => r.json().catch(() => [])),
+        fetch('/api/admin/preset-discounts', { credentials: 'include' }).then(r => r.json().catch(() => [])),
+        fetch('/api/admin/inventory', { credentials: 'include' }).then(r => r.json().catch(() => [])),
+        fetch('/api/admin/bartender-balances', { credentials: 'include' }).then(r => r.json().catch(() => []))
       ]);
       
       setUsers(usersRes.data);
@@ -54,6 +75,11 @@ export default function AdminPanel() {
       setInspectorPayments(paymentsRes);
       setManagerCalls(callsRes);
       setSecurityJobs(jobsRes);
+      setBarItems(itemsRes);
+      setInviteDiscounts(inviteDiscsRes);
+      setPresetDiscounts(presetDiscsRes);
+      setInventory(inventoryRes);
+      setBartenderBalances(balancesRes);
     } catch (err) {
       setError('Failed to load data');
       console.error(err);
@@ -243,6 +269,15 @@ export default function AdminPanel() {
         </button>
         <button className={activeTab === 'security-jobs' ? 'active' : ''} onClick={() => setActiveTab('security-jobs')}>
           SECURITY JOBS ({securityJobs.length})
+        </button>
+        <button className={activeTab === 'pricing' ? 'active' : ''} onClick={() => setActiveTab('pricing')}>
+          PRICING & DISCOUNTS
+        </button>
+        <button className={activeTab === 'inventory' ? 'active' : ''} onClick={() => setActiveTab('inventory')}>
+          INVENTORY
+        </button>
+        <button className={activeTab === 'bartenders' ? 'active' : ''} onClick={() => setActiveTab('bartenders')}>
+          BARTENDER BALANCES
         </button>
       </div>
 
@@ -639,33 +674,121 @@ export default function AdminPanel() {
 
         {activeTab === 'manager-calls' && (
           <div className="manager-calls-section">
-            <div className="section-header">MANAGER CALLS</div>
-            {managerCalls.length === 0 ? (
-              <p className="empty-state">No manager calls</p>
-            ) : (
-              <div className="calls-list">
-                {managerCalls.map((call) => (
-                  <div key={call.id} className={`call-item call-${call.status}`}>
-                    <div className="call-header">
-                      <span className="username">@{call.username}</span>
-                      <span className={`status-badge status-${call.status}`}>{call.status.toUpperCase()}</span>
+            <h3 style={{ marginBottom: '1.5rem', fontSize: '0.9rem', letterSpacing: '2px', color: '#888', fontWeight: 700 }}>MANAGER CALLS</h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+              {managerCalls.filter(c => c.status === 'open').length > 0 ? (
+                managerCalls.filter(c => c.status === 'open').map((call) => (
+                  <div key={call.id} style={{
+                    background: '#0d0d0d',
+                    border: '1px solid #2a2a2a',
+                    borderLeft: '3px solid #ff7f7f',
+                    borderRadius: '3px',
+                    padding: '1.5rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                      <div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>@{call.username}</div>
+                        <div style={{ fontSize: '0.7rem', color: '#555', marginTop: '0.25rem' }}>{new Date(call.created_at).toLocaleString()}</div>
+                      </div>
+                      <span style={{ 
+                        background: 'rgba(139, 58, 58, 0.3)',
+                        border: '1px solid #8b3a3a',
+                        color: '#ff6b6b',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '2px',
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        letterSpacing: '1px',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        OPEN
+                      </span>
                     </div>
-                    <div className="call-body">
-                      <p className="call-reason">{call.reason || '(No reason specified)'}</p>
-                      <p className="call-time">{formatDate(call.created_at)}</p>
-                    </div>
-                    {call.status === 'open' && (
-                      <button 
-                        className="resolve-btn"
-                        onClick={() => resolveManagerCall(call.id)}
-                        disabled={loading}
-                      >
-                        MARK RESOLVED
-                      </button>
+                    
+                    {call.reason && (
+                      <div style={{ 
+                        background: '#0a0a0a',
+                        padding: '0.75rem',
+                        borderRadius: '2px',
+                        fontSize: '0.85rem',
+                        color: '#888',
+                        fontFamily: 'monospace',
+                        borderLeft: '2px solid #3a3a3a',
+                        lineHeight: 1.4
+                      }}>
+                        {call.reason}
+                      </div>
                     )}
+                    
+                    <button 
+                      onClick={() => resolveManagerCall(call.id)}
+                      disabled={loading}
+                      style={{
+                        padding: '0.75rem',
+                        background: '#1a2a1a',
+                        border: '1px solid #3a5a3a',
+                        color: '#7ae87a',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        letterSpacing: '1px',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        borderRadius: '2px',
+                        transition: 'all 0.2s',
+                        opacity: loading ? 0.5 : 1
+                      }}
+                    >
+                      {loading ? 'RESOLVING...' : 'MARK RESOLVED'}
+                    </button>
                   </div>
-                ))}
-              </div>
+                ))
+              ) : (
+                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: '#555', fontSize: '0.85rem' }}>
+                  No open manager calls
+                </div>
+              )}
+            </div>
+
+            {managerCalls.filter(c => c.status === 'resolved').length > 0 && (
+              <>
+                <h4 style={{ fontSize: '0.8rem', color: '#666', letterSpacing: '1px', marginBottom: '1rem', marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid #2a2a2a' }}>RESOLVED</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                  {managerCalls.filter(c => c.status === 'resolved').slice(0, 10).map((call) => (
+                    <div key={call.id} style={{
+                      background: '#0d0d0d',
+                      border: '1px solid #2a2a2a',
+                      borderLeft: '3px solid #588b3a',
+                      borderRadius: '3px',
+                      padding: '1rem',
+                      opacity: 0.7
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                        <div style={{ fontSize: '0.8rem', color: '#888' }}>@{call.username}</div>
+                        <span style={{ 
+                          background: 'rgba(88, 139, 58, 0.3)',
+                          border: '1px solid #588b3a',
+                          color: '#90ee90',
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '2px',
+                          fontSize: '0.6rem',
+                          fontWeight: 700,
+                          letterSpacing: '1px'
+                        }}>
+                          RESOLVED
+                        </span>
+                      </div>
+                      {call.reason && (
+                        <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.5rem', fontFamily: 'monospace' }}>
+                          {call.reason.substring(0, 50)}{call.reason.length > 50 ? '...' : ''}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}
@@ -729,7 +852,189 @@ export default function AdminPanel() {
               )}
             </div>
           </div>
-        )}      </div>
+        )}
+
+        {activeTab === 'pricing' && (
+          <div>
+            <h3 style={{ marginBottom: '1.5rem', fontSize: '0.9rem', letterSpacing: '2px', color: '#888', fontWeight: 700 }}>BAR ITEMS</h3>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              setLoading(true);
+              fetch('/api/admin/bar-items', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newItem)
+              }).then(() => {
+                loadData();
+                setNewItem({ name: '', price: '', category: 'Drink' });
+                setSuccess('Item added');
+              }).catch(() => setError('Failed to add item')).finally(() => setLoading(false));
+            }} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '1rem', marginBottom: '2rem' }}>
+              <input type="text" placeholder="NAME" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} required />
+              <input type="number" placeholder="PRICE" value={newItem.price} onChange={(e) => setNewItem({...newItem, price: e.target.value})} step="0.01" required />
+              <select value={newItem.category} onChange={(e) => setNewItem({...newItem, category: e.target.value})} style={{ padding: '0.9rem', border: '1px solid #2a2a2a', background: '#0a0a0a', color: '#888' }}>
+                <option>Drink</option>
+                <option>Food</option>
+                <option>Snack</option>
+              </select>
+              <button type="submit" disabled={loading} style={{ padding: '0.9rem 1.5rem', background: '#1a2a1a', border: '1px solid #3a5a3a', color: '#7ae87a', cursor: 'pointer', borderRadius: '2px' }}>ADD</button>
+            </form>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem', marginBottom: '3rem' }}>
+              {barItems.map((item) => (
+                <div key={item.id} style={{ background: '#0d0d0d', border: '1px solid #2a2a2a', borderRadius: '3px', padding: '1rem' }}>
+                  <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{item.name}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.5rem' }}>{item.category}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px auto', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <span style={{ alignSelf: 'center', fontSize: '0.85rem', color: '#888' }}>${parseFloat(item.price).toFixed(2)}</span>
+                    <input type="number" step="0.01" defaultValue={parseFloat(item.price)} onChange={(e) => item._newPrice = e.target.value} style={{ padding: '0.5rem', background: '#0a0a0a', border: '1px solid #2a2a2a', color: '#888', borderRadius: '2px' }} />
+                    <button onClick={() => { setLoading(true); fetch(`/api/admin/bar-items/${item.id}`, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ price: parseFloat(item._newPrice || item.price) }) }).then(() => loadData()).catch(() => setError('Failed to update price')).finally(() => setLoading(false)); }} style={{ padding: '0.5rem', background: '#1a2a1a', border: '1px solid #3a5a3a', color: '#7ae87a', fontSize: '0.75rem', cursor: 'pointer', borderRadius: '2px' }}>SET PRICE</button>
+                  </div>
+                  <button onClick={() => { setLoading(true); fetch(`/api/admin/bar-items/${item.id}`, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ available: !item.available }) }).then(() => loadData()).catch(() => setError('Failed to toggle availability')).finally(() => setLoading(false)); }} style={{ width: '100%', padding: '0.5rem', background: item.available ? '#1a2a1a' : '#1a1a1a', border: '1px solid #3a5a3a', color: item.available ? '#7ae87a' : '#888', fontSize: '0.75rem', cursor: 'pointer', borderRadius: '2px', marginBottom: '0.5rem' }}>{item.available ? 'AVAILABLE' : 'UNAVAILABLE'}</button>
+                  <button onClick={() => { setLoading(true); fetch(`/api/admin/bar-items/${item.id}`, { method: 'DELETE', credentials: 'include' }).then(() => loadData()).catch(() => setError('Failed to delete')).finally(() => setLoading(false)); }} style={{ width: '100%', padding: '0.5rem', background: '#3a1a1a', border: '1px solid #5a2a2a', color: '#ff7f7f', fontSize: '0.75rem', cursor: 'pointer', borderRadius: '2px' }}>DELETE</button>
+                </div>
+              ))}
+            </div>
+
+            <h3 style={{ marginBottom: '1.5rem', fontSize: '0.9rem', letterSpacing: '2px', color: '#888', fontWeight: 700 }}>INVITE NUMBER DISCOUNTS</h3>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              setLoading(true);
+              fetch('/api/admin/invite-discounts', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ invite_count: parseInt(newInviteDiscount.invites), discount_percent: parseFloat(newInviteDiscount.discount) })
+              }).then(() => {
+                loadData();
+                setNewInviteDiscount({ invites: '', discount: '' });
+                setSuccess('Discount tier added');
+              }).catch(() => setError('Failed to add discount')).finally(() => setLoading(false));
+            }} style={{ display: 'grid', gridTemplateColumns: '200px 200px auto', gap: '1rem', marginBottom: '2rem' }}>
+              <input type="number" placeholder="INVITE COUNT" value={newInviteDiscount.invites} onChange={(e) => setNewInviteDiscount({...newInviteDiscount, invites: e.target.value})} min="1" required />
+              <input type="number" placeholder="DISCOUNT %" value={newInviteDiscount.discount} onChange={(e) => setNewInviteDiscount({...newInviteDiscount, discount: e.target.value})} step="0.01" max="100" required />
+              <button type="submit" disabled={loading} style={{ padding: '0.9rem 1.5rem', background: '#1a2a1a', border: '1px solid #3a5a3a', color: '#7ae87a', cursor: 'pointer', borderRadius: '2px' }}>ADD TIER</button>
+            </form>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginBottom: '3rem' }}>
+              {inviteDiscounts.sort((a, b) => a.invite_count - b.invite_count).map((disc) => (
+                <div key={disc.id} style={{ background: '#0d0d0d', border: '1px solid #2a2a2a', borderRadius: '3px', padding: '1rem' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.5rem' }}>INVITES</div>
+                  <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{disc.invite_count}+</div>
+                  <div style={{ fontSize: '0.9rem', color: '#7ae87a', marginBottom: '0.5rem' }}>{disc.discount_percent}% OFF</div>
+                  <button onClick={() => { setLoading(true); fetch(`/api/admin/invite-discounts/${disc.id}`, { method: 'DELETE', credentials: 'include' }).then(() => loadData()).catch(() => setError('Failed to delete')).finally(() => setLoading(false)); }} style={{ width: '100%', padding: '0.5rem', background: '#3a1a1a', border: '1px solid #5a2a2a', color: '#ff7f7f', fontSize: '0.75rem', cursor: 'pointer', borderRadius: '2px' }}>DELETE</button>
+                </div>
+              ))}
+            </div>
+
+            <h3 style={{ marginBottom: '1.5rem', fontSize: '0.9rem', letterSpacing: '2px', color: '#888', fontWeight: 700 }}>PRESET DISCOUNTS</h3>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              setLoading(true);
+              fetch('/api/admin/preset-discounts', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: newPresetUser.username, discount_percent: parseFloat(newPresetUser.discount) })
+              }).then(() => {
+                loadData();
+                setNewPresetUser({ username: '', discount: '' });
+                setSuccess('Preset discount added');
+              }).catch(() => setError('Failed to add preset')).finally(() => setLoading(false));
+            }} style={{ display: 'grid', gridTemplateColumns: '1fr 150px auto', gap: '1rem', marginBottom: '2rem' }}>
+              <input type="text" placeholder="USERNAME" value={newPresetUser.username} onChange={(e) => setNewPresetUser({...newPresetUser, username: e.target.value})} required />
+              <input type="number" placeholder="DISCOUNT %" value={newPresetUser.discount} onChange={(e) => setNewPresetUser({...newPresetUser, discount: e.target.value})} step="0.01" max="100" required />
+              <button type="submit" disabled={loading} style={{ padding: '0.9rem 1.5rem', background: '#1a2a1a', border: '1px solid #3a5a3a', color: '#7ae87a', cursor: 'pointer', borderRadius: '2px' }}>ADD USER</button>
+            </form>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
+              {presetDiscounts.map((preset) => (
+                <div key={preset.id} style={{ background: '#0d0d0d', border: '1px solid #2a2a2a', borderRadius: '3px', padding: '1rem' }}>
+                  <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>@{preset.username}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#7ae87a', marginBottom: '0.5rem' }}>{preset.discount_percent}% OFF</div>
+                  {preset.reason && <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.5rem' }}>{preset.reason}</div>}
+                  <button onClick={() => { setLoading(true); fetch(`/api/admin/preset-discounts/${preset.id}`, { method: 'DELETE', credentials: 'include' }).then(() => loadData()).catch(() => setError('Failed to delete')).finally(() => setLoading(false)); }} style={{ width: '100%', padding: '0.5rem', background: '#3a1a1a', border: '1px solid #5a2a2a', color: '#ff7f7f', fontSize: '0.75rem', cursor: 'pointer', borderRadius: '2px' }}>DELETE</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}      
+        {activeTab === 'bartenders' && (
+          <div>
+            <h3 style={{ marginBottom: '1.5rem', fontSize: '0.9rem', letterSpacing: '2px', color: '#888', fontWeight: 700 }}>BARTENDER BALANCES</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+              {bartenderBalances.map((b) => (
+                <div key={b.bartender_id} style={{ background: '#0d0d0d', border: '1px solid #2a2a2a', borderRadius: '3px', padding: '1rem' }}>
+                  <div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>@{b.bartender_name}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.5rem' }}>Total Sales: <span style={{ color: '#aaa', fontWeight: 600 }}>{Number(b.total_sales).toFixed(2)} {currency}</span></div>
+                  <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.5rem' }}>Withdrawn: <span style={{ color: '#aaa', fontWeight: 600 }}>{Number(b.total_payouts).toFixed(2)} {currency}</span></div>
+                  <div style={{ fontSize: '0.9rem', color: '#7ae87a', marginBottom: '0.75rem', fontWeight: 700 }}>Outstanding: {Number(b.outstanding).toFixed(2)} {currency}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px', gap: '0.5rem' }}>
+                    <input type="number" step="0.01" defaultValue={Number(b.outstanding).toFixed(2)} onChange={(e) => b._withdrawAmt = e.target.value} style={{ padding: '0.75rem', background: '#0a0a0a', border: '1px solid #2a2a2a', color: '#888', borderRadius: '2px' }} />
+                    <button onClick={() => { const amt = parseFloat(b._withdrawAmt ?? b.outstanding); if (isNaN(amt) || amt <= 0) { setError('Invalid amount'); return; } setLoading(true); fetch('/api/admin/bartender-payouts', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bartender_id: b.bartender_id, amount: amt }) }).then(async (r) => { if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.error || 'Failed to withdraw'); } }).then(() => { setSuccess('Withdrawal recorded'); loadData(); }).catch((e) => setError(e.message || 'Failed')).finally(() => setLoading(false)); }} disabled={loading || Number(b.outstanding) <= 0} style={{ padding: '0.75rem 1rem', background: '#1a2a1a', border: '1px solid #3a5a3a', color: '#7ae87a', fontWeight: 700, cursor: Number(b.outstanding) <= 0 ? 'not-allowed' : 'pointer', borderRadius: '2px' }}>WITHDRAW</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {activeTab === 'inventory' && (
+          <div>
+            <h3 style={{ marginBottom: '1.5rem', fontSize: '0.9rem', letterSpacing: '2px', color: '#888', fontWeight: 700 }}>MANAGE INVENTORY</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+              {barItems.map((item) => {
+                const inv = inventory.find(i => i.item_id === item.id);
+                const currentQty = inv?.quantity || 0;
+                const inputValue = inventoryUpdates[item.id] !== undefined ? inventoryUpdates[item.id] : currentQty;
+                
+                return (
+                  <div key={item.id} style={{ background: '#0d0d0d', border: '1px solid #2a2a2a', borderRadius: '3px', padding: '1.5rem' }}>
+                    <div style={{ fontWeight: 700, marginBottom: '0.5rem', fontSize: '1rem' }}>{item.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '1rem' }}>{item.category}</div>
+                    <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.75rem' }}>
+                      Price: <span style={{ color: '#aaa', fontWeight: 600 }}>{parseFloat(item.price).toFixed(2)} {currency}</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px', gap: '0.75rem', alignItems: 'flex-end' }}>
+                      <div>
+                        <label style={{ fontSize: '0.75rem', color: '#666', display: 'block', marginBottom: '0.5rem' }}>QUANTITY</label>
+                        <input 
+                          type="number" 
+                          value={inputValue} 
+                          onChange={(e) => setInventoryUpdates({...inventoryUpdates, [item.id]: parseInt(e.target.value) || 0})}
+                          style={{ width: '100%', padding: '0.75rem', background: '#0a0a0a', border: '1px solid #2a2a2a', color: '#888', borderRadius: '2px' }}
+                        />
+                      </div>
+                      <button
+                        onClick={() => {
+                          setLoading(true);
+                          fetch(`/api/admin/inventory`, {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ item_id: item.id, quantity: inputValue })
+                          }).then(() => {
+                            loadData();
+                            setSuccess(`Inventory updated for ${item.name}`);
+                          }).catch(() => setError('Failed to update')).finally(() => setLoading(false));
+                        }}
+                        disabled={loading}
+                        style={{ padding: '0.75rem 1rem', background: '#1a2a1a', border: '1px solid #3a5a3a', color: '#7ae87a', fontWeight: 700, cursor: 'pointer', borderRadius: '2px' }}
+                      >
+                        SET
+                      </button>
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #2a2a2a' }}>
+                      Current: <span style={{ color: '#888', fontWeight: 600 }}>{currentQty}</span> units
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

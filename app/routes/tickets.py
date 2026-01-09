@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app import db
-from app.models import Ticket, User, SecurityIncident, EventConfig, Invitation
+from app.models import Ticket, User, SecurityIncident, EventConfig, Invitation, PresetDiscount, InviteDiscount
 from app.middleware.auth import require_auth, require_role
 from datetime import datetime
 import uuid
@@ -51,7 +51,7 @@ def calculate_ticket_price(user_id):
     return round(base_price * (1 - discount_pct / 100), 2)
 
 @tickets_bp.route('/verify', methods=['POST'])
-@require_role(['ticket-inspector', 'admin', 'security'])
+@require_role(['ticket-inspector', 'admin', 'security', 'bartender'])
 def verify_ticket():
     user = request.user
     data = request.get_json() or {}
@@ -70,6 +70,24 @@ def verify_ticket():
     
     ticket_user = ticket.user
     is_special = ticket_user.role in ['security', 'admin', 'staff']
+    
+    # Get invite count
+    invite_count = Invitation.query.filter_by(inviter_id=ticket_user.id, status='accepted').count()
+    
+    # Calculate bar discount
+    bar_discount = 0.0
+    
+    # Check preset discount first
+    preset = PresetDiscount.query.filter_by(user_id=ticket_user.id).first()
+    if preset:
+        bar_discount = float(preset.discount_percent)
+    else:
+        # Check invite-based discounts
+        invite_discounts = InviteDiscount.query.order_by(InviteDiscount.invite_count.desc()).all()
+        for disc in invite_discounts:
+            if invite_count >= disc.invite_count:
+                bar_discount = float(disc.discount_percent)
+                break
     
     # Calculate ticket price (only for 'user' role)
     ticket_price = 0.0
@@ -92,12 +110,15 @@ def verify_ticket():
         return jsonify({
             'status': 'already_verified',
             'username': ticket_user.username,
+            'user_id': ticket_user.id,
             'role': ticket_user.role,
             'is_special': is_special,
             'verified_at': ticket.verified_at.isoformat() if ticket.verified_at else None,
             'ticket_price': ticket_price,
             'payment_status': payment_status,
-            'color': color
+            'color': color,
+            'invites': invite_count,
+            'bar_discount': bar_discount
         })
     
     # Mark as verified for first time
@@ -109,13 +130,16 @@ def verify_ticket():
     return jsonify({
         'status': 'verified',
         'username': ticket_user.username,
+        'user_id': ticket_user.id,
         'role': ticket_user.role,
         'is_special': is_special,
         'verified_at': ticket.verified_at.isoformat(),
         'ticket_price': ticket_price,
         'payment_status': payment_status,
         'color': color,
-        'verified_by': user.username
+        'verified_by': user.username,
+        'invites': invite_count,
+        'bar_discount': bar_discount
     })
 
 @tickets_bp.route('/all', methods=['GET'])

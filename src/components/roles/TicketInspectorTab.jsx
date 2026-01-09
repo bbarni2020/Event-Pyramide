@@ -12,6 +12,7 @@ export default function TicketInspectorTab({ user, config, onCallManager }) {
   const [error, setError] = useState('');
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const streamRef = useRef(null);
 
   useEffect(() => {
     if (activeMode === 'scanner' && scannerActive) {
@@ -23,24 +24,40 @@ export default function TicketInspectorTab({ user, config, onCallManager }) {
   }, [scannerActive, activeMode]);
 
   const startScanner = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError('Camera not available. Use a supported browser over HTTPS.');
+      setScannerActive(false);
+      return;
+    }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
-      });
+      const constraints = { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints).catch(() => navigator.mediaDevices.getUserMedia({ video: true }));
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        streamRef.current = stream;
         videoRef.current.onloadedmetadata = () => {
           scanQRCodes();
         };
       }
     } catch (err) {
-      setError('Cannot access camera');
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setError('Camera permission denied. Enable camera access in browser settings.');
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        setError('No camera found on this device.');
+      } else {
+        setError('Cannot access camera.');
+      }
+      setScannerActive(false);
     }
   };
 
   const stopScanner = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
   };
 
@@ -183,7 +200,6 @@ export default function TicketInspectorTab({ user, config, onCallManager }) {
     return colors[color] || colors.red;
   };
 
-  // Payment confirmation dialog for unpaid tickets
   if (showPaymentConfirm && lastResult && lastResult.paymentStatus === 'unpaid') {
     return (
       <div className="fullscreen-verification" style={{ backgroundColor: getColorBg('blue') }}>
@@ -221,9 +237,7 @@ export default function TicketInspectorTab({ user, config, onCallManager }) {
     );
   }
 
-  // Fullscreen display
   if (showFullscreen && lastResult) {
-    // Determine display color: gold for security/admin, otherwise use result color
     const displayColor = (lastResult.role === 'security' || lastResult.role === 'admin') ? 'gold' : lastResult.color;
     
     return (
@@ -315,7 +329,7 @@ export default function TicketInspectorTab({ user, config, onCallManager }) {
             </button>
           ) : (
             <>
-              <video ref={videoRef} autoPlay playsInline />
+              <video ref={videoRef} autoPlay playsInline muted />
               <canvas ref={canvasRef} style={{ display: 'none' }} />
               <button
                 className="button danger"

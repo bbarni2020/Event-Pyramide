@@ -274,3 +274,128 @@ security_job_assignments = db.Table(
     db.Column('job_id', db.Integer, db.ForeignKey('security_jobs.id'), primary_key=True),
     db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True)
 )
+
+class BarItem(db.Model):
+    __tablename__ = 'bar_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text)
+    price = db.Column(db.Numeric(10, 2), nullable=False)
+    category = db.Column(db.String(100), default='Drink')
+    available = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'price': float(self.price),
+            'category': self.category,
+            'available': self.available,
+        }
+
+class InviteDiscount(db.Model):
+    __tablename__ = 'invite_discounts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    invite_count = db.Column(db.Integer, nullable=False, unique=True)
+    discount_percent = db.Column(db.Numeric(5, 2), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'invite_count': self.invite_count,
+            'discount_percent': float(self.discount_percent),
+        }
+
+class PresetDiscount(db.Model):
+    __tablename__ = 'preset_discounts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    discount_percent = db.Column(db.Numeric(5, 2), nullable=False)
+    reason = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', backref='preset_discounts')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'username': self.user.username if self.user else None,
+            'discount_percent': float(self.discount_percent),
+            'reason': self.reason,
+        }
+
+class BarInventory(db.Model):
+    __tablename__ = 'bar_inventory'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey('bar_items.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False, default=0)
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    item = db.relationship('BarItem', backref='inventory')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'item_id': self.item_id,
+            'item_name': self.item.name if self.item else None,
+            'quantity': self.quantity,
+            'last_updated': self.last_updated.isoformat(),
+        }
+
+class BarTransaction(db.Model):
+    __tablename__ = 'bar_transactions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    bartender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    items_json = db.Column(db.JSON, nullable=False)  # {item_id: quantity}
+    total_amount = db.Column(db.Numeric(10, 2), nullable=False)
+    discount_applied = db.Column(db.Numeric(5, 2), default=0)  # discount percentage
+    actual_amount = db.Column(db.Numeric(10, 2), nullable=False)
+    completed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    bartender = db.relationship('User', foreign_keys=[bartender_id], backref='bar_transactions_as_bartender')
+    customer = db.relationship('User', foreign_keys=[customer_id], backref='bar_transactions_as_customer')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'bartender_id': self.bartender_id,
+            'bartender_name': self.bartender.username if self.bartender else None,
+            'customer_id': self.customer_id,
+            'customer_name': self.customer.username if self.customer else None,
+            'items_json': self.items_json,
+            'total_amount': float(self.total_amount),
+            'discount_applied': float(self.discount_applied),
+            'actual_amount': float(self.actual_amount),
+            'completed_at': self.completed_at.isoformat(),
+        }
+
+class BarPayout(db.Model):
+    __tablename__ = 'bar_payouts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    bartender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    bartender = db.relationship('User', foreign_keys=[bartender_id], backref='bar_payouts')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'bartender_id': self.bartender_id,
+            'bartender_name': self.bartender.username if self.bartender else None,
+            'amount': float(self.amount),
+            'created_at': self.created_at.isoformat(),
+        }
