@@ -35,7 +35,6 @@ def generate_ticket():
     return jsonify(ticket.to_dict()), 201
 
 def calculate_ticket_price(user_id):
-    """Calculate ticket price based on invites accepted"""
     config = EventConfig.query.first()
     if not config or config.ticket_price is None:
         return 0.0
@@ -71,31 +70,25 @@ def verify_ticket():
     ticket_user = ticket.user
     is_special = ticket_user.role in ['security', 'admin', 'staff']
     
-    # Get invite count
     invite_count = Invitation.query.filter_by(inviter_id=ticket_user.id, status='accepted').count()
     
-    # Calculate bar discount
     bar_discount = 0.0
     
-    # Check preset discount first
     preset = PresetDiscount.query.filter_by(user_id=ticket_user.id).first()
     if preset:
         bar_discount = float(preset.discount_percent)
     else:
-        # Check invite-based discounts
         invite_discounts = InviteDiscount.query.order_by(InviteDiscount.invite_count.desc()).all()
         for disc in invite_discounts:
             if invite_count >= disc.invite_count:
                 bar_discount = float(disc.discount_percent)
                 break
     
-    # Calculate ticket price (only for 'user' role)
     ticket_price = 0.0
     payment_status = 'free'
     
     if ticket_user.role == 'user':
         ticket_price = calculate_ticket_price(ticket_user.id)
-        # Check if already verified (paid)
         if ticket.verified:
             payment_status = 'paid'
             color = 'green'
@@ -121,7 +114,6 @@ def verify_ticket():
             'bar_discount': bar_discount
         })
     
-    # Mark as verified for first time
     ticket.verified = True
     ticket.verified_at = datetime.utcnow()
     ticket.verified_by = user.id
@@ -162,8 +154,6 @@ def confirm_payment():
     if not ticket:
         return jsonify({'error': 'Ticket not found'}), 404
     
-    # Store payment confirmation (you could add a separate payment_confirmed field to Ticket model if needed)
-    # For now, marking paid tickets as verified is enough
     if paid:
         ticket.verified = True
         ticket.verified_at = datetime.utcnow()

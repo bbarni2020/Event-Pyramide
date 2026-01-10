@@ -264,6 +264,7 @@ class SecurityJob(db.Model):
             'description': self.description,
             'required_people': self.required_people,
             'assigned_count': len(self.assigned_users),
+            'assigned_user_ids': [u.id for u in self.assigned_users],
             'status': self.status,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,

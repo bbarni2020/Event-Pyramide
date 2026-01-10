@@ -185,27 +185,29 @@ export default function SecurityTab({ user, onCallManager }) {
           {incidents.filter(i => i.status === 'open').length === 0 ? (
             <p style={{ textAlign: 'center', color: '#555', fontSize: '0.8rem', padding: '1rem' }}>No active incidents</p>
           ) : (
-            incidents.filter(i => i.status === 'open').map((incident) => (
+            incidents.filter(i => i.status === 'open').map((incident) => {
+              const isUserAssigned = incident.assigned_user_ids?.includes(user.id);
+              return (
               <div key={incident.id} className="list-row">
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, marginBottom: '0.3rem' }}>{incident.incident_type}</div>
+                  <div style={{ fontWeight: 600, marginBottom: '0.3rem' }}>{incident.title}</div>
                   {incident.description && (
                     <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.3rem' }}>{incident.description}</div>
                   )}
                   <div style={{ fontSize: '0.7rem', color: '#555' }}>
-                    {incident.assigned_count}/{incident.people_needed} ASSIGNED
+                    {incident.assigned_count}/{incident.required_people} ASSIGNED
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   <button
-                    onClick={() => incident.assigned_count > 0 ? selfUnassignIncident(incident.id) : selfAssignIncident(incident.id)}
+                    onClick={() => isUserAssigned ? selfUnassignIncident(incident.id) : selfAssignIncident(incident.id)}
                     disabled={loading}
                     style={{
                       padding: '0.6rem 0.9rem',
                       fontSize: '0.7rem',
-                      background: incident.assigned_count > 0 ? '#1a2a1a' : '#1a1a1a',
-                      border: `1px solid ${incident.assigned_count > 0 ? '#3a5a3a' : '#3a3a3a'}`,
-                      color: incident.assigned_count > 0 ? '#7ae87a' : '#888',
+                      background: isUserAssigned ? '#1a2a1a' : '#1a1a1a',
+                      border: `1px solid ${isUserAssigned ? '#3a5a3a' : '#3a3a3a'}`,
+                      color: isUserAssigned ? '#7ae87a' : '#888',
                       cursor: loading ? 'not-allowed' : 'pointer',
                       borderRadius: '2px',
                       fontWeight: 600,
@@ -214,30 +216,30 @@ export default function SecurityTab({ user, onCallManager }) {
                       opacity: loading ? 0.5 : 1
                     }}
                   >
-                    {incident.assigned_count > 0 ? 'UNASSIGN' : 'ASSIGN'}
+                    {isUserAssigned ? 'UNASSIGN' : 'ASSIGN'}
                   </button>
                   <button
                     onClick={() => updateIncidentStatus(incident.id, 'resolved')}
-                    disabled={incident.assigned_count < incident.people_needed || loading}
+                    disabled={incident.assigned_count < incident.required_people || loading}
                     style={{
                       padding: '0.6rem 0.9rem',
                       fontSize: '0.7rem',
-                      background: incident.assigned_count >= incident.people_needed ? '#1a2a1a' : '#1a1a1a',
-                      border: `1px solid ${incident.assigned_count >= incident.people_needed ? '#3a5a3a' : '#3a3a3a'}`,
-                      color: incident.assigned_count >= incident.people_needed ? '#7ae87a' : '#666',
-                      cursor: incident.assigned_count >= incident.people_needed && !loading ? 'pointer' : 'not-allowed',
+                      background: incident.assigned_count >= incident.required_people ? '#1a2a1a' : '#1a1a1a',
+                      border: `1px solid ${incident.assigned_count >= incident.required_people ? '#3a5a3a' : '#3a3a3a'}`,
+                      color: incident.assigned_count >= incident.required_people ? '#7ae87a' : '#666',
+                      cursor: incident.assigned_count >= incident.required_people && !loading ? 'pointer' : 'not-allowed',
                       borderRadius: '2px',
                       fontWeight: 600,
                       letterSpacing: '1px',
-                      opacity: incident.assigned_count >= incident.people_needed && !loading ? 1 : 0.5,
+                      opacity: incident.assigned_count >= incident.required_people && !loading ? 1 : 0.5,
                       transition: 'all 0.2s'
                     }}
                   >
-                    {incident.assigned_count >= incident.people_needed ? 'RESOLVE' : 'WAITING'}
+                    {incident.assigned_count >= incident.required_people ? 'RESOLVE' : 'WAITING'}
                   </button>
                 </div>
               </div>
-            ))
+            );})
           )}
         </div>
       </div>

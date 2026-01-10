@@ -106,9 +106,15 @@ def update_item(item_id):
 @admin_bar_bp.route('/bar-items/<int:item_id>', methods=['DELETE'])
 @require_admin
 def delete_item(item_id):
+    from app.models import BarInventory, BarTransaction
+    
     item = BarItem.query.get(item_id)
     if not item:
         return jsonify({'error': 'Item not found'}), 404
+    
+    BarInventory.query.filter_by(item_id=item_id).delete()
+    BarTransaction.query.filter_by(item_id=item_id).delete()
+    
     db.session.delete(item)
     db.session.commit()
     return jsonify({'success': True})
