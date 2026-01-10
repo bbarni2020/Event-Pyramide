@@ -192,7 +192,20 @@ export default function Dashboard() {
     setSuccess('');
 
     try {
-      const reason = typeof reasonParam === 'string' ? reasonParam : '';
+      let reason = typeof reasonParam === 'string' ? reasonParam : '';
+      if (!reason) {
+        if (user?.role === 'bartender') {
+          reason = 'bar';
+        } else if (user?.role === 'ticket-inspector') {
+          reason = 'entrance';
+        } else {
+          const place = window.prompt('Where is it?');
+          if (place === null) { setLoading(false); return; }
+          const why = window.prompt('Why do you need a manager?');
+          if (why === null) { setLoading(false); return; }
+          reason = place && why ? `${place} - ${why}` : (place || why || '');
+        }
+      }
       const response = await fetch('/api/event/call-manager', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -391,11 +404,13 @@ export default function Dashboard() {
                     <div className="ticket-price">FREE</div>
                     <div className="ticket-role">{user?.role.toUpperCase()}</div>
                   </div>
-                  <div className="revenue-box">
-                    <div className="revenue-label">YOUR SALARY</div>
-                    <div className="revenue-value">{formatMoney(staffSalary)}</div>
-                    <div className="revenue-subtext">Per event</div>
-                  </div>
+                  {staffSalary > 0 && (
+                    <div className="revenue-box">
+                      <div className="revenue-label">YOUR SALARY</div>
+                      <div className="revenue-value">{formatMoney(staffSalary)}</div>
+                      <div className="revenue-subtext">Per event</div>
+                    </div>
+                  )}
                 </div>
                 <div className="attendance-section">
                   <div className="attendance-label">ATTENDANCE</div>

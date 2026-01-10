@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from sqlalchemy import func
 from app import db
 from app.models import User, Invitation, EventConfig, RoleSalary, Ticket, ManagerCall, SecurityJob
-from app.middleware.auth import require_admin
+from app.middleware.auth import require_admin, require_auth
 from app.services import cache
 from datetime import datetime
 from decimal import Decimal
@@ -190,7 +190,7 @@ def update_config():
     
     return jsonify({'success': True})
 @admin_bp.route('/salaries', methods=['GET'])
-@require_admin
+@require_auth
 def get_salaries():
     salaries = RoleSalary.query.all()
     return jsonify([s.to_dict() for s in salaries])

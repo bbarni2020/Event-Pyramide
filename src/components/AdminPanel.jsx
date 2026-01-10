@@ -265,7 +265,7 @@ export default function AdminPanel() {
           BROADCAST
         </button>
         <button className={activeTab === 'manager-calls' ? 'active' : ''} onClick={() => setActiveTab('manager-calls')}>
-          MANAGER CALLS ({managerCalls.length})
+          MANAGER CALLS ({managerCalls.filter(c => c.status === 'open').length})
         </button>
         <button className={activeTab === 'security-jobs' ? 'active' : ''} onClick={() => setActiveTab('security-jobs')}>
           SECURITY JOBS ({securityJobs.length})
