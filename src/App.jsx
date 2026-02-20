@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import AdminPanel from './components/AdminPanel';
@@ -7,6 +8,7 @@ import './App.css';
 
 function AppContent() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { language, available, changeLanguage, t } = useLanguage();
   const [currentView, setCurrentView] = useState('dashboard');
 
   if (isLoading) {
@@ -21,17 +23,32 @@ function AppContent() {
     <>
       <nav className="navbar">
         <div className="nav-content">
-          <h1>EVENT PYRAMIDE</h1>
+          <h1>{/* title is static for now but could be keyed */}
+            EVENT PYRAMIDE
+          </h1>
           <div className="nav-actions">
             <span className="user-info">
               {user.username}
-              {user.role === 'admin' && <span className="admin-badge">ADMIN</span>}
+              {user.is_admin && <span className="admin-badge">ADMIN</span>}
             </span>
-            <button onClick={() => setCurrentView('dashboard')}>Dashboard</button>
-            {user.role === 'admin' && (
-              <button onClick={() => setCurrentView('admin')}>Admin Panel</button>
+            {/* language selector */}
+            {Object.keys(available).length > 0 && (
+              <select
+                value={language}
+                onChange={(e) => changeLanguage(e.target.value)}
+              >
+                {Object.entries(available).map(([code, name]) => (
+                  <option key={code} value={code}>
+                    {name}
+                  </option>
+                ))}
+              </select>
             )}
-            <button onClick={logout}>Logout</button>
+            <button onClick={() => setCurrentView('dashboard')}>{t('nav.dashboard')}</button>
+            {user.is_admin && (
+              <button onClick={() => setCurrentView('admin')}>{t('nav.admin')}</button>
+            )}
+            <button onClick={logout}>{t('nav.logout')}</button>
           </div>
         </div>
       </nav>
@@ -46,7 +63,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
     </AuthProvider>
   );
 }

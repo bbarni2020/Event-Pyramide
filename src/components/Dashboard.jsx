@@ -150,8 +150,8 @@ export default function Dashboard() {
   };
 
   const acceptedInvites = invitations.filter((inv) => inv.status === 'accepted').length;
-  const invitationLimit = user?.role === 'admin' ? '∞' : config.maxInvitesPerUser;
-  const remainingInvites = user?.role === 'admin'
+  const invitationLimit = user?.is_admin ? '∞' : config.maxInvitesPerUser;
+  const remainingInvites = user?.is_admin
     ? '∞'
     : Math.max(0, config.maxInvitesPerUser - invitations.length);
 
@@ -301,11 +301,11 @@ export default function Dashboard() {
                 placeholder="INSTAGRAM ID"
                 value={newInvitation.instagram_id}
                 onChange={(e) => setNewInvitation({ instagram_id: e.target.value })}
-                disabled={loading || (user?.role !== 'admin' && invitations.length >= config.maxInvitesPerUser)}
+                disabled={loading || (!user?.is_admin && invitations.length >= config.maxInvitesPerUser)}
               />
               <button 
                 type="submit" 
-                disabled={loading || (user?.role !== 'admin' && invitations.length >= config.maxInvitesPerUser)}
+                disabled={loading || (!user?.is_admin && invitations.length >= config.maxInvitesPerUser)}
               >
                 {loading ? 'PROCESSING...' : 'GRANT ACCESS'}
               </button>

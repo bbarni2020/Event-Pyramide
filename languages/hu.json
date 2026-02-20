@@ -1,43 +1,43 @@
 {
   "app_title": "Event Pyramide",
-  "app_subtitle": "Csak Meghívóval",
+  "app_subtitle": "Csak meghívásos",
   "login": {
-    "feature_exclusive": "Exkluzív Hozzáférés",
-    "feature_invites": "Akár 5 Alias Kiosztása",
-    "feature_ticket": "Digitális Belépőkód",
-    "username_label": "Instagram Felhasználónév",
+    "feature_exclusive": "Exkluzív hozzáférés",
+    "feature_invites": "Legfeljebb 5 alias megadása",
+    "feature_ticket": "Digitális belépőkód",
+    "username_label": "Instagram felhasználónév",
     "username_placeholder": "felhasználónév",
-    "request_access": "Hozzáférés Kérése",
+    "request_access": "Hozzáférés kérése",
     "verify_code": "Ellenőrzés",
     "back": "← Vissza",
-    "code_sent": "Kód Elküldve",
-    "verification_code_label": "Ellenőrző Kód",
+    "code_sent": "Kód elküldve ide",
+    "verification_code_label": "Ellenőrző kód",
     "verification_placeholder": "000000",
     "enter_username": "Add meg az Instagram felhasználóneved",
     "enter_code": "Add meg az ellenőrző kódot",
-    "send_code_failed": "Kód küldése sikertelen",
+    "send_code_failed": "A kód küldése sikertelen",
     "verification_failed": "Ellenőrzés sikertelen"
   },
   "nav": {
-    "dashboard": "Vezérlőpult",
+    "dashboard": "Főoldal",
     "admin": "Admin",
     "logout": "Kijelentkezés",
     "admin_badge": "Admin"
   },
   "dashboard": {
     "tabs": {
-      "grant_access": "Hozzáférés Adása",
-      "event_ticket": "Esemény Jegy",
+      "grant_access": "Hozzáférés adása",
+      "event_ticket": "Esemény jegy",
       "attendance": "Részvétel"
     },
     "invitations": {
-      "title": "Hozzáférés Adása",
-      "remaining": "Hátralévő",
-      "instagram_label": "Instagram Azonosító",
+      "title": "Hozzáférés adása",
+      "remaining": "Fennmaradó",
+      "instagram_label": "Instagram azonosító",
       "instagram_placeholder": "instagram felhasználónév",
-      "grant_button": "Hozzáférés Adása",
-      "granted_count": "Kiosztva",
-      "no_invitations": "Még nincsenek meghívók elküldve",
+      "grant_button": "Hozzáférés adása",
+      "granted_count": "Adva",
+      "no_invitations": "Még nem küldtek meghívót",
       "success": "Meghívó sikeresen elküldve!",
       "failed": "Meghívó küldése sikertelen",
       "enter_id": "Adj meg egy Instagram azonosítót",
@@ -46,23 +46,23 @@
       "status_rejected": "Elutasítva"
     },
     "ticket": {
-      "title": "Esemény Jegy",
-      "no_ticket": "Még nincs generált jegy",
-      "generate_button": "Jegy Generálása",
+      "title": "Esemény jegy",
+      "no_ticket": "Még nincs jegy létrehozva",
+      "generate_button": "Jegy generálása",
       "ticket_code": "Jegykód",
       "tier": "Szint",
       "price": "Ár",
-      "issued": "Kiállítva",
-      "generated": "Jegy generálva!",
-      "failed": "Jegy generálása sikertelen"
+      "issued": "Kibocsátva",
+      "generated": "Jegy létrehozva!",
+      "failed": "Jegy létrehozása sikertelen"
     },
     "attendance": {
       "title": "Részvétel",
       "yes": "Igen, részt veszek",
       "no": "Nem veszek részt",
-      "marked_attending": "Részt vesznek között vagy jelölve",
-      "marked_not_attending": "Nem részt vevők között vagy jelölve",
-      "failed": "Részvétel frissítése sikertelen"
+      "marked_attending": "Részvételként jelölted magad",
+      "marked_not_attending": "Nem részvételként jelölted magad",
+      "failed": "A részvétel frissítése sikertelen"
     }
   },
   "admin": {
@@ -70,7 +70,7 @@
       "users": "Felhasználók",
       "invitations": "Meghívók",
       "tickets": "Jegyek",
-      "config": "Beállítások",
+      "config": "Beállítás",
       "broadcast": "Közvetítés"
     },
     "users": {
@@ -81,12 +81,12 @@
       "actions": "Műveletek",
       "role_admin": "Admin",
       "role_user": "Felhasználó",
-      "status_banned": "Tiltva",
+      "status_banned": "Kitiltva",
       "status_active": "Aktív",
-      "ban": "Tiltás",
-      "unban": "Tiltás Feloldása",
-      "user_banned": "Felhasználó tiltva",
-      "user_unbanned": "Felhasználó tiltása feloldva"
+      "ban": "Kitiltás",
+      "unban": "Kitiltás feloldása",
+      "user_banned": "Felhasználó kitiltva",
+      "user_unbanned": "Felhasználó kitiltása feloldva"
     },
     "invitations": {
       "title": "Meghívók",
@@ -101,26 +101,26 @@
       "ticket_code": "Jegykód",
       "tier": "Szint",
       "price": "Ár",
-      "issued": "Kiállítva"
+      "issued": "Kibocsátva"
     },
     "config": {
-      "title": "Esemény Beállítások",
-      "event_date": "Esemény Dátuma",
-      "max_participants": "Max. Résztvevők",
-      "max_invites": "Max. Meghívók Felhasználónként",
-      "ticket_price": "Jegy Ára",
-      "save": "Beállítások Mentése",
+      "title": "Esemény beállítások",
+      "event_date": "Esemény dátuma",
+      "max_participants": "Max. résztvevők",
+      "max_invites": "Max. meghívások felhasználónként",
+      "ticket_price": "Jegyár",
+      "save": "Beállítások mentése",
       "updated": "Beállítások frissítve!",
       "failed": "Beállítások frissítése sikertelen"
     },
     "broadcast": {
-      "title": "Közvetített Üzenet",
+      "title": "Közvetítési üzenet",
       "message_label": "Üzenet",
-      "message_placeholder": "Írj be egy üzenetet...",
-      "send": "Közvetítés Küldése",
+      "message_placeholder": "Írj üzenetet...",
+      "send": "Közvetítés küldése",
       "sent": "Közvetítés elküldve {count} felhasználónak",
       "failed": "Közvetítés küldése sikertelen",
-      "enter_message": "Írj be egy üzenetet"
+      "enter_message": "Adj meg egy üzenetet"
     }
   },
   "messages": {

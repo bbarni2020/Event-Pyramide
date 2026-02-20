@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify, session
+from flask import Flask, jsonify, session, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from flask_migrate import Migrate
@@ -82,6 +82,15 @@ def create_app():
         from languages import get_current_language, AVAILABLE_LANGUAGES
         lang = session.get('language', get_current_language())
         return jsonify({'language': lang, 'available': AVAILABLE_LANGUAGES})
+
+    # serve language files from the languages folder so the frontend can fetch them directly
+    @app.route('/languages/<lang_code>.json')
+    def serve_language_file(lang_code):
+        from languages import LANGUAGES_DIR
+        lang_file = LANGUAGES_DIR / f"{lang_code}.json"
+        if lang_file.exists():
+            return send_file(lang_file, mimetype='application/json')
+        return jsonify({'error': 'not found'}), 404
     
     @app.route('/api/admin/diagnostics', methods=['GET'])
     def diagnostics():

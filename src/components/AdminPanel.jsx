@@ -35,7 +35,11 @@ export default function AdminPanel() {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
 
-  if (user?.role !== 'admin') {
+  // allow any user whose account has the admin flag; the role string is
+  // still kept around for backwards compatibility, but the boolean comes
+  // directly from the server and mirrors the check performed by the API
+  // middleware.
+  if (!user?.is_admin) {
     return (
       <div className="access-denied">
         <h2>Access Denied</h2>

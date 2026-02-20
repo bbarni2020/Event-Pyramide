@@ -108,7 +108,7 @@ export default function TicketInspectorTab({ user, config, onCallManager }) {
           isSpecial: data.is_special,
           ticketPrice: data.ticket_price,
           paymentStatus: data.payment_status,
-          color: data.color || 'green',
+          color: (data.role === 'security' || data.role === 'admin') ? 'gold' : (data.color || 'green'),
           qrCode: qrCode,
           timestamp: new Date()
         });
@@ -185,7 +185,7 @@ export default function TicketInspectorTab({ user, config, onCallManager }) {
       'green': '#1a4d1a',
       'blue': '#1a3a4d',
       'red': '#4d1a1a',
-      'gold': '#4d4d1a'
+      'gold': '#ffd961'
     };
     return colors[color] || colors.red;
   };
@@ -195,14 +195,14 @@ export default function TicketInspectorTab({ user, config, onCallManager }) {
       'green': '#00ff00',
       'blue': '#00aaff',
       'red': '#ff0000',
-      'gold': '#ffd700'
+      'gold': '#ffb400'
     };
     return colors[color] || colors.red;
   };
 
   if (showPaymentConfirm && lastResult && lastResult.paymentStatus === 'unpaid') {
     return (
-      <div className="fullscreen-verification" style={{ backgroundColor: getColorBg('blue') }}>
+      <div className={`fullscreen-verification ${lastResult && (lastResult.role === 'security' || lastResult.role === 'admin') ? 'highlight-auth' : ''}`} style={{ backgroundColor: getColorBg('blue') }}>
         <div className="fullscreen-content">
           <div className="status-circle" style={{ borderColor: getColorBorder('blue') }}>
             <span>⏳</span>
@@ -241,7 +241,7 @@ export default function TicketInspectorTab({ user, config, onCallManager }) {
     const displayColor = (lastResult.role === 'security' || lastResult.role === 'admin') ? 'gold' : lastResult.color;
     
     return (
-      <div className="fullscreen-verification" style={{ backgroundColor: getColorBg(displayColor) }}>
+      <div className={`fullscreen-verification ${displayColor === 'gold' ? 'highlight-auth' : ''}`} style={{ backgroundColor: getColorBg(displayColor) }}>
         <div className="fullscreen-content">
           {lastResult.status === 'verified' || lastResult.status === 'already_verified' ? (
             <>
@@ -354,7 +354,7 @@ export default function TicketInspectorTab({ user, config, onCallManager }) {
 
       {lastResult && !showFullscreen && (
         <div
-          className="verification-result"
+          className={`verification-result ${(lastResult.role === 'security' || lastResult.role === 'admin') ? 'highlight-auth' : ''}`}
           style={{ borderColor: getColorBorder(lastResult.color) }}
         >
           <div className="status-indicator" style={{ backgroundColor: getColorBorder(lastResult.color) }}></div>

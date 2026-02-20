@@ -57,4 +57,9 @@ export const adminService = {
   broadcast: (data) => api.post('/api/bot/broadcast', data)
 };
 
+export const languageService = {
+  getCurrent: () => api.get('/api/language/current'),
+  setLanguage: (code) => api.post(`/api/language/set/${code}`)
+};
+
 export default api;

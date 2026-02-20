@@ -1,53 +1,140 @@
 # Event Pyramide
 
-A modern, invite-only event management platform with OTP authentication via Instagram bot messaging. Users log in with verification codes sent directly to their Instagram DMs, manage their event invitations, and admins control ticket pricing, discounts, and invite limits.
+Invite-only event management platform with OTP authentication via Instagram bot messaging. Users log in with verification codes sent via Instagram DMs, manage invitations, and admins control tickets and user access.
 
 ## Features
 
 - **OTP Authentication**: Users log in with 6-digit codes sent via Instagram bot
-- **Invitation System**: Grant access to specific Instagram users with invite-based registration
-- **Admin Dashboard**: Full control over event config, user management, and invitations
-- **User Banning**: Admins can ban users to prevent participation
-- **Dynamic Pricing**: Set ticket price, currency, and maximum discount for fully accepted invite chains
-- **Invite Limits**: Control max invites per user (scales with event needs)
-- **Industrial UI**: Dark theme with minimal, system-like interface
-- **Session-Based Auth**: Secure PostgreSQL-backed sessions instead of OAuth
+- **Invitation System**: Grant access to specific Instagram users  
+- **Admin Dashboard**: Manage users, invitations, tickets, and event configuration
+- **User Banning**: Admins can restrict participation
+- **Dynamic Pricing**: Configure ticket price and tiers
+- **Invite Limits**: Control max invites per user
+- **Session-Based Auth**: PostgreSQL-backed sessions
 
 ## Tech Stack
 
-- **Frontend**: Svelte 4.2.8 + Vite 5.0.8
-- **Backend**: Express.js 4.x
-- **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: Session-based with OTP via Instagram Graph API
-- **Bot Integration**: Instagram Graph API for DM messaging
+- **Frontend**: Plain HTML/JavaScript with Jinja2 templates
+- **Backend**: Python Flask
+- **Database**: PostgreSQL with SQLAlchemy ORM
+- **Caching**: Redis
+- **Authentication**: Session-based with OTP via Instagram
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js 16+
+- Python 3.11+
 - PostgreSQL 12+
+- Redis
 - Instagram Business Account (for bot messaging)
 
 ### Installation
 
 ```bash
-# Clone and install dependencies
-npm install
+git clone <repo>
+cd Event-Pyramide
 
-# Set up environment
+python -m venv venv
+source venv/bin/activate
+
+pip install -r requirements.txt
+
 cp .env.example .env
-# Edit .env with your Instagram bot credentials
+# Edit .env with your Instagram credentials
 ```
 
-### Environment Variables
+### Running Locally
+
+```bash
+python app.py
+```
+
+Visit `http://localhost:5001`
+
+### Docker
+
+```bash
+docker-compose up -d
+```
+
+## Environment Variables
 
 ```env
-NODE_ENV=development
+FLASK_ENV=development
 PORT=5001
-CLIENT_URL=http://localhost:5001
 
+APP_LANGUAGE=en
+
+DB_USER=eventuser
+DB_PASSWORD=eventpass
 DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=eventpyramide
+
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+SESSION_SECRET=your-secret-key
+
+ADMIN_INSTAGRAM_USERNAMES=admin1,admin2
+INSTAGRAM_API_URL=https://api.instagram.com/v1
+INSTAGRAM_ACCESS_TOKEN=token
+```
+
+## Language Support
+
+The application supports multiple languages. The default is English; you can change the startup language in the `.env` file:
+
+```bash
+APP_LANGUAGE=en
+```
+
+A language selector is also available in the frontend navbar once you log in. The dropdown is populated from the server and will honour the `APP_LANGUAGE` default. Changing the value sends a request to the API and reloads the UI so that any future translated text is rendered correctly.
+
+Users can also change language programmatically via the API:
+
+```bash
+curl -X POST http://localhost:5001/api/language/set/en
+```
+
+To add a new language later, drop a JSON file in the root `languages/` folder and update `AVAILABLE_LANGUAGES` in `languages/__init__.py`.
+
+## API Endpoints
+
+### Authentication
+- `POST /auth/request-otp` - Request verification code
+- `POST /auth/verify-otp` - Verify and login
+- `GET /auth/check-status` - Check auth status
+- `POST /auth/logout` - Logout
+
+### User Features
+- `GET /api/invitations/` - List sent invitations
+- `POST /api/invitations/` - Send invitation
+- `GET /api/tickets/my-ticket` - Get user's ticket
+- `POST /api/tickets/generate` - Generate ticket
+
+### Admin
+- `GET /api/admin/users` - List all users
+- `POST /api/admin/users/{id}/ban` - Ban user
+- `POST /api/admin/users/{id}/unban` - Unban user
+- `GET /api/admin/invitations` - List all invitations
+- `GET /api/admin/tickets` - List all tickets
+- `GET /api/admin/config` - Get event config
+- `PUT /api/admin/config` - Update event config
+
+### Bot
+- `POST /api/bot/send-update` - Send DM to user
+- `POST /api/bot/broadcast` - Send DM to all users
+
+## Database Schema
+
+**users** - User accounts
+**invitations** - Invitation records
+**event_config** - Event settings
+**tickets** - Generated tickets
+**bot_messages** - Sent messages log
+
 DB_PORT=5432
 DB_USER=eventuser
 DB_PASSWORD=eventpass

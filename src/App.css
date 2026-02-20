@@ -93,6 +93,22 @@ body {
   color: #aaa;
 }
 
+.navbar select {
+  padding: 0.4rem 0.8rem;
+  background: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  color: #888;
+  font-size: 0.75rem;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.navbar select:hover {
+  background: #2a2a2a;
+  border-color: #4a4a4a;
+  color: #aaa;
+}
+
 .container {
   max-width: 1400px;
   margin: 0 auto;
