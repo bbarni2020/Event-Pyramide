@@ -1,323 +1,245 @@
 # Event Pyramide
 
-Invite-only event management platform with OTP authentication via Instagram bot messaging. Users log in with verification codes sent via Instagram DMs, manage invitations, and admins control tickets and user access.
+Manage exclusive events the way people actually use social media. Send OTP codes via Instagram DMs, let people RSVP without creating another account, and keep control of who gets in. It's like a VIP list, but make it digital.
 
-## Features
+## What This Does
 
-- **OTP Authentication**: Users log in with 6-digit codes sent via Instagram bot
-- **Invitation System**: Grant access to specific Instagram users  
-- **Admin Dashboard**: Manage users, invitations, tickets, and event configuration
-- **User Banning**: Admins can restrict participation
-- **Dynamic Pricing**: Configure ticket price and tiers
-- **Invite Limits**: Control max invites per user
-- **Session-Based Auth**: PostgreSQL-backed sessions
+- **Invite folks via Instagram** — Guests get a 6-digit code texted to their DMs. No email signups, no separate accounts.
+- **Admin dashboard** — Manage attendees, ban people if they're being weird, set ticket prices, control how many invites each person gets.
+- **Tickets that work** — Generate actual tickets once people RSVP. Works offline if needed.
+- **Session-based auth** — Runs on PostgreSQL, so your data isn't going anywhere.
 
-## Tech Stack
+## Stack
 
-- **Frontend**: Plain HTML/JavaScript with Jinja2 templates
-- **Backend**: Python Flask
-- **Database**: PostgreSQL with SQLAlchemy ORM
-- **Caching**: Redis
-- **Authentication**: Session-based with OTP via Instagram
+- Python Flask (backend keeps it simple)
+- PostgreSQL (reliable)
+- Redis (for caching, optional but recommended)
+- Plain HTML/JS frontend with Jinja2 (no framework bloat)
+- Instagram Graph API (for DMs)
 
-## Quick Start
+## Get It Running
 
 ### Prerequisites
 
 - Python 3.11+
 - PostgreSQL 12+
-- Redis
-- Instagram Business Account (for bot messaging)
+- Redis (optional, but useful)
+- Instagram Business Account with Graph API access
 
-### Installation
+### Setup
 
 ```bash
 git clone <repo>
 cd Event-Pyramide
 
 python -m venv venv
-source venv/bin/activate
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
 
 pip install -r requirements.txt
 
 cp .env.example .env
-# Edit .env with your Instagram credentials
+# Edit .env with your actual credentials (see below)
 ```
 
-### Running Locally
+### .env Setup
 
-```bash
-python app.py
-```
-
-Visit `http://localhost:5001`
-
-### Docker
-
-```bash
-docker-compose up -d
-```
-
-## Environment Variables
+Grab these from your Instagram app and Meta dashboard:
 
 ```env
 FLASK_ENV=development
 PORT=5001
-
 APP_LANGUAGE=en
 
+# Database
 DB_USER=eventuser
 DB_PASSWORD=eventpass
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=eventpyramide
 
+# Cache (skip if you don't need it initially)
 REDIS_HOST=localhost
 REDIS_PORT=6379
 
-SESSION_SECRET=your-secret-key
+# Auth
+SESSION_SECRET=pick-something-random-and-long
 
-ADMIN_INSTAGRAM_USERNAMES=admin1,admin2
-INSTAGRAM_API_URL=https://api.instagram.com/v1
-INSTAGRAM_ACCESS_TOKEN=token
+# Instagram stuff
+ADMIN_INSTAGRAM_USERNAMES=your_ig_handle,other_admin
+INSTAGRAM_BOT_ACCESS_TOKEN=IGAA...your_token_here
+INSTAGRAM_BUSINESS_ACCOUNT_ID=123456789
 ```
+
+### Run It
+
+**Local development:**
+```bash
+python app.py
+```
+
+Hit `http://localhost:5001` in your browser.
+
+**Docker:**
+```bash
+docker-compose up -d
+```
+
+## How It Actually Works
+
+1. Guest enters their Instagram username
+2. System generates a random 6-digit code
+3. Your bot sends it via Instagram DM (they'll see it right away)
+4. Guest pastes the code back, boom — they're logged in
+5. Admin sees them in the dashboard, can ban them if needed
+
+**Important:** People need to message your bot account first. Instagram won't let you initiate conversations with random users — it's a spam prevention thing. For testing, just DM yourself.
+
+## Admin Panel
+
+Go to `/admin` once you're logged in as an admin.
+
+### What You Can Do
+
+**USERS**
+- See everyone who's signed up
+- Ban/unban people (no questions asked by the system, but you make the call)
+
+**GRANTS**
+- Track who invited who
+- See acceptance status
+
+**CONFIG**
+- Event date, capacity limits
+- Ticket price and currency
+- Max invites per person
+- Max discount if people use all their invites
+
+**BROADCAST**
+- Send a message to everyone at once (use sparingly)
 
 ## Language Support
 
-The application supports multiple languages. The default is English; you can change the startup language in the `.env` file:
+The app supports multiple languages. Default is English. Change it in `.env`:
 
-```bash
+```env
 APP_LANGUAGE=en
 ```
 
-A language selector is also available in the frontend navbar once you log in. The dropdown is populated from the server and will honour the `APP_LANGUAGE` default. Changing the value sends a request to the API and reloads the UI so that any future translated text is rendered correctly.
+Or let people pick via the navbar dropdown once they log in. Adding a new language is straightforward — drop a JSON file in `languages/` and update `AVAILABLE_LANGUAGES` in `languages/__init__.py`.
 
-Users can also change language programmatically via the API:
-
+You can also flip languages via API:
 ```bash
-curl -X POST http://localhost:5001/api/language/set/en
+curl -X POST http://localhost:5001/api/language/set/fr
 ```
-
-To add a new language later, drop a JSON file in the root `languages/` folder and update `AVAILABLE_LANGUAGES` in `languages/__init__.py`.
-
-## API Endpoints
-
-### Authentication
-- `POST /auth/request-otp` - Request verification code
-- `POST /auth/verify-otp` - Verify and login
-- `GET /auth/check-status` - Check auth status
-- `POST /auth/logout` - Logout
-
-### User Features
-- `GET /api/invitations/` - List sent invitations
-- `POST /api/invitations/` - Send invitation
-- `GET /api/tickets/my-ticket` - Get user's ticket
-- `POST /api/tickets/generate` - Generate ticket
-
-### Admin
-- `GET /api/admin/users` - List all users
-- `POST /api/admin/users/{id}/ban` - Ban user
-- `POST /api/admin/users/{id}/unban` - Unban user
-- `GET /api/admin/invitations` - List all invitations
-- `GET /api/admin/tickets` - List all tickets
-- `GET /api/admin/config` - Get event config
-- `PUT /api/admin/config` - Update event config
-
-### Bot
-- `POST /api/bot/send-update` - Send DM to user
-- `POST /api/bot/broadcast` - Send DM to all users
-
-## Database Schema
-
-**users** - User accounts
-**invitations** - Invitation records
-**event_config** - Event settings
-**tickets** - Generated tickets
-**bot_messages** - Sent messages log
-
-DB_PORT=5432
-DB_USER=eventuser
-DB_PASSWORD=eventpass
-DB_NAME=eventpyramide
-
-SESSION_SECRET=your-random-secret-here
-
-INSTAGRAM_BOT_ACCESS_TOKEN=IGAA...your_long_lived_token
-INSTAGRAM_BUSINESS_ACCOUNT_ID=123456789
-
-ADMIN_INSTAGRAM_USERNAMES=admin_username
-
-VITE_API_URL=http://localhost:5001
-```
-
-### Start Development Server
-
-```bash
-npm run dev
-```
-
-Both frontend and backend run on `http://localhost:5001`.
-
-## Authentication Flow
-
-1. User enters Instagram username
-2. Server generates 6-digit OTP code
-3. Instagram bot sends code via DM to user
-4. User enters code to complete login
-5. Session created in PostgreSQL
-
-**Note**: Instagram API only allows messaging users who have messaged your account first. For production, users should DM your bot account before attempting login.
-
-## Admin Features
-
-Access the admin dashboard at `/admin` (requires admin role).
-
-### Sections
-
-- **USERS**: View all registered users, ban/unban accounts
-- **GRANTS**: Monitor invitation status and acceptance
-- **CONFIG**: 
-  - Event date and capacity
-  - Ticket pricing and currency
-  - Max invites per user
-  - Max discount % when all invites accepted
-- **BROADCAST**: Send system-wide messages to all users
-
-## Instagram Bot Setup
-
-See [INSTAGRAM_SETUP.md](INSTAGRAM_SETUP.md) for complete setup guide including:
-
-- Creating a Meta app
-- Connecting Instagram Business account
-- Generating access tokens
-- Getting your Business Account ID
-- Testing locally
-- Going live with app review
-
-TL;DR: Get a long-lived access token from Graph API Explorer, set `INSTAGRAM_BOT_ACCESS_TOKEN` in `.env`, restart server.
-
-## Database Setup
-
-### Fresh Database
-
-```bash
-# PostgreSQL will run migrations on first boot via init.sql
-npm run dev
-```
-
-### Existing Database
-
-If you have an existing Event Pyramide database, run the migration:
-
-```bash
-psql -U eventuser -d eventpyramide -f server/database/migrations.sql
-```
-
-This adds:
-- `is_banned` column to users
-- `ticket_price`, `currency`, `max_invites_per_user`, `max_discount_percent` to event_config
 
 ## API Endpoints
 
 ### Auth
+- `POST /auth/request-otp` — Get a code sent to your DMs
+- `POST /auth/verify-otp` — Verify the code, create session
+- `GET /auth/check-status` — See if you're logged in
+- `POST /auth/logout` — Peace out
 
-- `POST /auth/request-otp` - Request OTP for username
-- `POST /auth/verify-otp` - Verify code and create session
-- `GET /auth/status` - Check login status
-- `POST /auth/logout` - Destroy session
+### User Stuff
+- `GET /api/invitations/` — List who you've invited
+- `POST /api/invitations/` — Send an invite
+- `GET /api/tickets/my-ticket` — Get your ticket
+- `POST /api/tickets/generate` — Make a ticket
 
-### Invitations
+### Admin Endpoints
+- `GET /api/admin/users` — Everyone
+- `POST /api/admin/users/{id}/ban` — Block someone
+- `POST /api/admin/users/{id}/unban` — Unblock them
+- `GET /api/admin/config` — Event settings
+- `PUT /api/admin/config` — Update settings
+- `GET /api/admin/invitations` — All invitation activity
+- `GET /api/admin/tickets` — All tickets
+- `POST /api/bot/broadcast` — Send to everyone
 
-- `GET /api/invitations` - Get my invitations
-- `POST /api/invitations` - Send invitation to user
+## Database Schema
 
-### Admin
+Nothing fancy. Five tables:
 
-- `GET /api/admin/users` - List all users
-- `POST /api/admin/users/:userId/ban` - Ban user
-- `POST /api/admin/users/:userId/unban` - Restore user
-- `GET /api/admin/config` - Get event config
-- `PUT /api/admin/config` - Update event config
-- `GET /api/admin/invitations` - Get all invitations
-- `POST /api/bot/broadcast` - Send broadcast message
+- `users` — Sign-up records
+- `invitations` — Who invited who
+- `event_config` — Event details, pricing, limits
+- `tickets` — Generated tickets for attendees
+- `bot_messages` — Log of what the bot sent (for debugging)
 
-## Project Structure
+Fresh database? It'll auto-migrate on first boot. If you're upgrading from an old version, check `migrations/` for what changed.
 
-```
-├── src/                          # Frontend (Svelte)
-│   ├── components/
-│   │   ├── App.svelte           # Main layout & nav
-│   │   ├── Login.svelte         # OTP login form
-│   │   ├── Dashboard.svelte     # User invitations
-│   │   └── AdminPanel.svelte    # Admin interface
-│   ├── stores/
-│   │   └── auth.js              # Auth state store
-│   ├── services/
-│   │   └── api.js               # API client setup
-│   └── main.js
-│
-├── server/                       # Backend (Express)
-│   ├── index.js                 # Server entry point
-│   ├── database/
-│   │   ├── pool.js              # Database connection
-│   │   ├── schema.js            # Drizzle schema definitions
-│   │   ├── init.sql             # Initial schema
-│   │   └── migrations.sql       # Schema updates
-│   ├── middleware/
-│   │   └── auth.js              # Session & auth checks
-│   ├── models/                  # Database query functions
-│   │   ├── user.js
-│   │   ├── invitation.js
-│   │   ├── event.js
-│   │   └── ticket.js
-│   ├── routes/
-│   │   ├── auth.js              # OTP endpoints
-│   │   ├── invitations.js       # Invitation endpoints
-│   │   ├── admin.js             # Admin endpoints
-│   │   └── bot.js               # Bot messaging endpoints
-│   └── services/
-│       └── instagramBot.js      # Instagram Graph API wrapper
-│
-├── vite.config.js              # Frontend build config
-├── docker-compose.yml          # PostgreSQL container setup
-└── README.md
-```
+## Instagram Bot Setup
+
+The bot setup is its own thing. See [INSTAGRAM_SETUP.md](INSTAGRAM_SETUP.md) for the full walkthrough — includes Meta app creation, getting tokens, all that.
+
+TL;DR: Get a long-lived token from Graph API Explorer, paste it in `.env`, restart. Done.
+
+## What Actually Works, What Doesn't
+
+**Works Great**
+- Sending OTP codes via DM
+- Multi-language UI
+- Banning people
+- Simple ticket generation
+
+**Known Quirks**
+- Instagram only lets you message people who've messaged you first (not our rule, blame Meta)
+- Long-lived tokens expire after 60 days (you'll need to manually refresh via Graph API)
+- OTP codes are in-memory by default (fine for small events, use Redis if you're scaling)
+- Single admin list (defined by Instagram usernames in `.env`)
+
+**Doesn't Work (Yet)**
+- Multi-event management (it's one event per deployment)
+- Email fallback if Instagram is down
+- Scheduled broadcasts
+
+## Production Checklist
+
+Before you go live:
+
+- [ ] Generate a new `SESSION_SECRET` (something cryptographically random)
+- [ ] Get your Instagram app approved for `instagram_manage_messages` permission
+- [ ] Switch Meta app from Development to Live mode
+- [ ] Set up Redis for OTP storage (in-memory isn't production-ready)
+- [ ] Configure HTTPS/SSL (your users' DMs aren't going over HTTP)
+- [ ] Use a `.env.production` file, don't hardcode secrets
+- [ ] Set `FLASK_ENV=production`
+- [ ] Implement token refresh automation (tokens expire every 60 days)
+
+## Troubleshooting
+
+**Bot isn't sending messages**
+- Check your `INSTAGRAM_BOT_ACCESS_TOKEN` — expired tokens are the #1 culprit
+- Make sure your app is in Live mode, not Development
+- User must have messaged your bot account first
+
+**OTP codes never arrive**
+- Same as above — token probably expired
+- Check Instagram app permissions are approved
+- Look at `bot_messages` table to see what the bot attempted
+
+**Database won't connect**
+- Verify PostgreSQL is running: `psql -U eventuser -d eventpyramide`
+- Check `DB_HOST`, `DB_PORT`, credentials in `.env`
+- Migrations might be failing — check logs
+
+**Sessions keep expiring**
+- Increase `cookie.maxAge` in the session config (it's in seconds)
+- Make sure Redis is running if you're using it
 
 ## Development Notes
 
-- OTP codes expire after 10 minutes
-- Sessions last 30 days (configurable via `cookie.maxAge`)
-- In-memory OTP storage (use Redis for production)
-- Instagram tokens expire after 60 days (manual refresh required)
-- All timestamps in UTC
-
-## Known Limitations
-
-1. **Instagram Messaging**: Users must message your bot account first before receiving OTP codes
-2. **Token Expiry**: Long-lived tokens last 60 days and require manual refresh
-3. **In-Memory OTP**: Not suitable for scaled deployment without Redis
-4. **Single Admin List**: Admins defined by username list in `ADMIN_INSTAGRAM_USERNAMES`
-
-## Production Deployment
-
-Before going live:
-
-1. Generate new `SESSION_SECRET` (use strong random string)
-2. Get Instagram app approved for `instagram_manage_messages` permission
-3. Switch app from Development to Live mode
-4. Implement token refresh automation
-5. Set up Redis for OTP storage
-6. Configure HTTPS/SSL
-7. Use environment-specific `.env` files
-8. Set `NODE_ENV=production`
+- OTP codes time out after 10 minutes (configurable)
+- Sessions last 30 days by default
+- All timestamps are UTC
+- The frontend is plain HTML/JS — no build step needed unless you're modifying templates
 
 ## License
 
-MIT
+MIT. Do what you want with it.
 
-## Support
+---
 
-For issues with Instagram bot setup, see [INSTAGRAM_SETUP.md](INSTAGRAM_SETUP.md).
-
-For token errors in logs, ensure `INSTAGRAM_BOT_ACCESS_TOKEN` is set and hasn't expired.
+Need help with Instagram setup? See [INSTAGRAM_SETUP.md](INSTAGRAM_SETUP.md).  
+Found a bug? Open an issue or PR.
 
