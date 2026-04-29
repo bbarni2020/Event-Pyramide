@@ -8,7 +8,6 @@ export default defineConfig(({ mode }) => {
     .map(host => host.trim())
     .filter(Boolean);
   const hmrHost = (env.VITE_HMR_HOST || env.FRONTEND_HOST || '').trim();
-  const hmrClientPort = Number(env.VITE_HMR_CLIENT_PORT || env.CADDY_PORT || 5001);
   
   return {
     plugins: [react()],
@@ -19,8 +18,7 @@ export default defineConfig(({ mode }) => {
       ...(hmrHost ? {
         hmr: {
           host: hmrHost,
-          protocol: env.VITE_HMR_PROTOCOL || 'wss',
-          clientPort: hmrClientPort
+          protocol: env.VITE_HMR_PROTOCOL || 'ws'
         }
       } : {}),
       proxy: {
