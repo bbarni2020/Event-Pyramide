@@ -54,13 +54,13 @@ APP_LANGUAGE=en
 # Frontend / server wiring
 # Leave VITE_API_URL empty if the frontend and API are served from the same origin.
 # Add VITE_HMR_* only when you're exposing Vite through a reverse proxy on another host.
-VITE_DEV_HOST=0.0.0.0
-VITE_DEV_PORT=5001
+VITE_DEV_HOST=127.0.0.1
+VITE_DEV_PORT=5173
 VITE_ALLOWED_HOSTS=localhost,127.0.0.1,event.bbarni.hackclub.app
 VITE_API_URL=
 VITE_HMR_HOST=
 VITE_HMR_PROTOCOL=wss
-VITE_HMR_CLIENT_PORT=443
+VITE_HMR_CLIENT_PORT=5001
 
 # If your frontend is on a different origin, list it here.
 CORS_ALLOWED_ORIGINS=https://event.bbarni.hackclub.app
@@ -106,7 +106,9 @@ docker compose up --build -d
 
 ### One-Container Deploy
 
-The Docker setup now runs PostgreSQL, Redis, the Flask backend, and the built frontend in one container. Caddy is the only thing exposed to the outside world, and it listens on a single port.
+The Docker setup now runs PostgreSQL, Redis, the Flask backend, and the Vite dev server in one container. Caddy is the only thing exposed to the outside world, and it listens on a single port.
+
+The container starts `npm run dev` and the Flask API together, while Caddy fronts both of them on the same public port.
 
 Point both public hostnames at the same container port in your server proxy:
 

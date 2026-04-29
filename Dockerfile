@@ -25,6 +25,8 @@ RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		bash \
 		caddy \
+		nodejs \
+		npm \
 		postgresql-15 \
 		redis-server \
 		tini \
@@ -34,6 +36,7 @@ WORKDIR /app
 
 COPY --from=python-deps /opt/venv /opt/venv
 COPY . /app
+COPY --from=frontend-build /src/node_modules /app/node_modules
 COPY --from=frontend-build /src/dist /srv/frontend/dist
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
@@ -42,6 +45,6 @@ RUN chmod +x /usr/local/bin/entrypoint.sh \
 	&& mkdir -p /var/lib/postgresql/data /var/lib/redis \
 	&& chown -R postgres:postgres /var/lib/postgresql /var/lib/redis
 
-EXPOSE 8080
+EXPOSE 5001
 
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]

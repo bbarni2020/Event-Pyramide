@@ -12,7 +12,10 @@ export REDIS_HOST="${REDIS_HOST:-127.0.0.1}"
 export REDIS_PORT="${REDIS_PORT:-6379}"
 export HOST="${HOST:-0.0.0.0}"
 export PORT="${PORT:-5002}"
-export CADDY_PORT="${CADDY_PORT:-8080}"
+export APP_MODE="${APP_MODE:-dev}"
+export CADDY_PORT="${CADDY_PORT:-5001}"
+export VITE_DEV_HOST="${VITE_DEV_HOST:-127.0.0.1}"
+export VITE_DEV_PORT="${VITE_DEV_PORT:-5173}"
 export FRONTEND_HOST="${FRONTEND_HOST:-event.bbarni.hackclub.app}"
 export API_HOST="${API_HOST:-api.event.bbarni.hackclub.app}"
 
@@ -40,16 +43,19 @@ fi
 python app.py &
 backend_pid=$!
 
+npm run dev -- --host "$VITE_DEV_HOST" --port "$VITE_DEV_PORT" &
+frontend_pid=$!
+
 caddy run --config /etc/caddy/Caddyfile --adapter caddyfile &
 caddy_pid=$!
 
 cleanup() {
   set +e
-  kill "$backend_pid" "$caddy_pid" 2>/dev/null || true
+  kill "$backend_pid" "$frontend_pid" "$caddy_pid" 2>/dev/null || true
   redis-cli -p "$REDIS_PORT" shutdown >/dev/null 2>&1 || true
   su postgres -s /bin/bash -c "pg_ctl -D '$PGDATA' -m fast stop" >/dev/null 2>&1 || true
 }
 
 trap cleanup EXIT INT TERM
 
-wait -n "$backend_pid" "$caddy_pid"
+wait -n "$backend_pid" "$frontend_pid" "$caddy_pid"

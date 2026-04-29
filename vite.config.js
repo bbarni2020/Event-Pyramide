@@ -7,8 +7,8 @@ export default defineConfig(({ mode }) => {
     .split(',')
     .map(host => host.trim())
     .filter(Boolean);
-  const hmrHost = (env.VITE_HMR_HOST || '').trim();
-  const hmrClientPort = Number(env.VITE_HMR_CLIENT_PORT || 443);
+  const hmrHost = (env.VITE_HMR_HOST || env.FRONTEND_HOST || '').trim();
+  const hmrClientPort = Number(env.VITE_HMR_CLIENT_PORT || env.CADDY_PORT || 5001);
   
   return {
     plugins: [react()],
