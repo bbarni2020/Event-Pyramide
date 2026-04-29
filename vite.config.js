@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     server: {
+      allowedHosts: ['localhost', 'event.bbarni.hackclub.app'],
       port: 5001,
       proxy: {
         '/api': {
