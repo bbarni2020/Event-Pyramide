@@ -67,7 +67,7 @@ CORS_ALLOWED_ORIGINS=https://event.bbarni.hackclub.app
 
 FRONTEND_HOST=event.bbarni.hackclub.app
 API_HOST=api.event.bbarni.hackclub.app
-CADDY_PORT=8080
+CADDY_PORT=5001
 
 # Database
 DB_USER=eventuser
@@ -110,8 +110,8 @@ The Docker setup now runs PostgreSQL, Redis, the Flask backend, and the built fr
 
 Point both public hostnames at the same container port in your server proxy:
 
-- `event.bbarni.hackclub.app` -> container port `8080`
-- `api.event.bbarni.hackclub.app` -> container port `8080`
+- `event.bbarni.hackclub.app` -> container port `5001`
+- `api.event.bbarni.hackclub.app` -> container port `5001`
 
 The frontend uses the same origin for API calls, so it works from the public domain without extra host-specific config.
 
