@@ -7,15 +7,14 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     server: {
-      allowedHosts: ['event.bbarni.hackclub.app'],
       port: 5001,
       proxy: {
         '/api': {
-          target: 'http://localhost:5002',
+            target: env.VITE_API_URL || 'http://localhost:5002',
           changeOrigin: true
         },
         '/auth': {
-          target: 'http://localhost:5002',
+            target: env.VITE_API_URL || 'http://localhost:5002',
           changeOrigin: true
         }
       }
