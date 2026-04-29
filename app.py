@@ -2,8 +2,12 @@ import os
 from dotenv import load_dotenv
 from app import create_app
 
-load_dotenv()
+load_dotenv(override=True)
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=os.getenv('FLASK_ENV') == 'development', port=int(os.getenv('PORT', 5002)))
+    app.run(
+        debug=os.getenv('FLASK_ENV') == 'development',
+        host=os.getenv('HOST', '0.0.0.0'),
+        port=int(os.getenv('PORT', 5002))
+    )

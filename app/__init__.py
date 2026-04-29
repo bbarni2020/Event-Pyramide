@@ -7,7 +7,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from datetime import timedelta, datetime
 
-load_dotenv()
+load_dotenv(override=True)
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -16,7 +16,7 @@ def create_app():
     app = Flask(__name__)
     cors_origins = os.getenv(
         'CORS_ALLOWED_ORIGINS',
-        'http://localhost:5001,http://127.0.0.1:5001,https://event.bbarni.hackclub.app'
+        'http://localhost:5001,http://127.0.0.1:5001'
     )
     
     CORS(app,
@@ -40,7 +40,7 @@ def create_app():
     app.config['SESSION_PERMANENT'] = True
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['SESSION_COOKIE_SECURE'] = False
+    app.config['SESSION_COOKIE_SECURE'] = os.getenv('SESSION_COOKIE_SECURE', 'false').lower() == 'true'
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.secret_key = os.getenv('SESSION_SECRET', 'event-pyramide-secret-key-change-in-production')
     

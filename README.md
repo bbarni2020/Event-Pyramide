@@ -47,8 +47,23 @@ Grab these from your Instagram app and Meta dashboard:
 
 ```env
 FLASK_ENV=development
-PORT=5001
+HOST=0.0.0.0
+PORT=5002
 APP_LANGUAGE=en
+
+# Frontend / server wiring
+# Leave VITE_API_URL empty if the frontend and API are served from the same origin.
+# Add VITE_HMR_* only when you're exposing Vite through a reverse proxy on another host.
+VITE_DEV_HOST=0.0.0.0
+VITE_DEV_PORT=5001
+VITE_ALLOWED_HOSTS=localhost,127.0.0.1
+VITE_API_URL=
+VITE_HMR_HOST=
+VITE_HMR_PROTOCOL=wss
+VITE_HMR_CLIENT_PORT=443
+
+# If your frontend is on a different origin, list it here.
+CORS_ALLOWED_ORIGINS=http://localhost:5001,http://127.0.0.1:5001
 
 # Database
 DB_USER=eventuser
