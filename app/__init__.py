@@ -16,7 +16,7 @@ def create_app():
     app = Flask(__name__)
     
     CORS(app,
-         origins=['http://localhost:5001', 'http://127.0.0.1:5001'],
+         origins=['http://localhost:5001', 'http://127.0.0.1:5001', 'https://event.bbarni.hackclub.app'],
          supports_credentials=True,
          allow_headers=["Content-Type", "Authorization", "X-XSRF-TOKEN"],
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
