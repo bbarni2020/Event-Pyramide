@@ -2,7 +2,7 @@
     auto_https off
 }
 
-{$FRONTEND_HOST}:{$CADDY_PORT} {
+http://{$FRONTEND_HOST}:{$CADDY_PORT} {
     handle /api/* {
         reverse_proxy 127.0.0.1:{$PORT}
     }
@@ -16,6 +16,6 @@
     }
 }
 
-{$API_HOST}:{$CADDY_PORT} {
+http://{$API_HOST}:{$CADDY_PORT} {
     reverse_proxy 127.0.0.1:{$PORT}
 }
