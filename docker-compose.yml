@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: eventpass
       POSTGRES_DB: eventpyramide
     ports:
-      - "5432:5433"
+      - "5433:5432"
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
       - ./server/database/init.sql:/docker-entrypoint-initdb.d/init.sql
