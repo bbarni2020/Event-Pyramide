@@ -46,7 +46,7 @@ cp .env.example .env
 Grab these from your Instagram app and Meta dashboard:
 
 ```env
-FLASK_ENV=development
+FLASK_ENV=production
 HOST=0.0.0.0
 PORT=5002
 APP_LANGUAGE=en
@@ -56,28 +56,33 @@ APP_LANGUAGE=en
 # Add VITE_HMR_* only when you're exposing Vite through a reverse proxy on another host.
 VITE_DEV_HOST=0.0.0.0
 VITE_DEV_PORT=5001
-VITE_ALLOWED_HOSTS=localhost,127.0.0.1
+VITE_ALLOWED_HOSTS=localhost,127.0.0.1,event.bbarni.hackclub.app
 VITE_API_URL=
 VITE_HMR_HOST=
 VITE_HMR_PROTOCOL=wss
 VITE_HMR_CLIENT_PORT=443
 
 # If your frontend is on a different origin, list it here.
-CORS_ALLOWED_ORIGINS=http://localhost:5001,http://127.0.0.1:5001
+CORS_ALLOWED_ORIGINS=https://event.bbarni.hackclub.app
+
+FRONTEND_HOST=event.bbarni.hackclub.app
+API_HOST=api.event.bbarni.hackclub.app
+CADDY_PORT=8080
 
 # Database
 DB_USER=eventuser
 DB_PASSWORD=eventpass
-DB_HOST=localhost
+DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_NAME=eventpyramide
 
 # Cache (skip if you don't need it initially)
-REDIS_HOST=localhost
+REDIS_HOST=127.0.0.1
 REDIS_PORT=6379
 
 # Auth
 SESSION_SECRET=pick-something-random-and-long
+SESSION_COOKIE_SECURE=true
 
 # Instagram stuff
 ADMIN_INSTAGRAM_USERNAMES=your_ig_handle,other_admin
@@ -96,8 +101,19 @@ Hit `http://localhost:5001` in your browser.
 
 **Docker:**
 ```bash
-docker-compose up -d
+docker compose up --build -d
 ```
+
+### One-Container Deploy
+
+The Docker setup now runs PostgreSQL, Redis, the Flask backend, and the built frontend in one container. Caddy is the only thing exposed to the outside world, and it listens on a single port.
+
+Point both public hostnames at the same container port in your server proxy:
+
+- `event.bbarni.hackclub.app` -> container port `8080`
+- `api.event.bbarni.hackclub.app` -> container port `8080`
+
+The frontend uses the same origin for API calls, so it works from the public domain without extra host-specific config.
 
 ## How It Actually Works
 

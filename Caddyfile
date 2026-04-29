@@ -1,7 +1,23 @@
-event.bbarni.hackclub.app {
-    reverse_proxy localhost:5001
+{
+    auto_https off
 }
 
-api.event.bbarni.hackclub.app {
-    reverse_proxy localhost:5002
+{$FRONTEND_HOST}:{$CADDY_PORT} {
+    handle /api/* {
+        reverse_proxy 127.0.0.1:{$PORT}
+    }
+
+    handle /auth/* {
+        reverse_proxy 127.0.0.1:{$PORT}
+    }
+
+    handle {
+        root * /srv/frontend/dist
+        try_files {path} /index.html
+        file_server
+    }
+}
+
+{$API_HOST}:{$CADDY_PORT} {
+    reverse_proxy 127.0.0.1:{$PORT}
 }
