@@ -6,6 +6,8 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from dotenv import load_dotenv
 from datetime import timedelta, datetime
+import logging
+import traceback
 
 load_dotenv(override=True)
 
@@ -107,6 +109,15 @@ def create_app():
             })
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+    
+    @app.errorhandler(500)
+    def handle_500_error(error):
+        import sys
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        error_msg = f"500 ERROR: {error}\n"
+        error_msg += "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+        print(error_msg, file=sys.stderr)
+        return jsonify({'error': 'Internal server error', 'message': str(error)}), 500
     
     with app.app_context():
         db.create_all()
