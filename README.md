@@ -29,7 +29,7 @@ Manage exclusive events the way people actually use social media. Send OTP codes
 ### Setup
 
 ```bash
-git clone <repo>
+git clone https://github.com/bbarni2020/Event-Pyramide
 cd Event-Pyramide
 
 python -m venv venv
