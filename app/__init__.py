@@ -14,9 +14,13 @@ migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
+    cors_origins = os.getenv(
+        'CORS_ALLOWED_ORIGINS',
+        'http://localhost:5001,http://127.0.0.1:5001,https://event.bbarni.hackclub.app'
+    )
     
     CORS(app,
-         origins=['http://localhost:5001', 'http://127.0.0.1:5001', 'https://event.bbarni.hackclub.app'],
+         origins=[origin.strip() for origin in cors_origins.split(',') if origin.strip()],
          supports_credentials=True,
          allow_headers=["Content-Type", "Authorization", "X-XSRF-TOKEN"],
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
