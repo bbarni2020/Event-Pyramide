@@ -40,6 +40,9 @@ if ! redis-cli -p "$REDIS_PORT" ping >/dev/null 2>&1; then
   redis-server --daemonize yes --bind 127.0.0.1 --port "$REDIS_PORT" --dir /var/lib/redis --save "" --appendonly no
 fi
 
+echo "Running database migrations..."
+python run_all_migrations.py
+
 python app.py &
 backend_pid=$!
 
