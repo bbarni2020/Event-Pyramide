@@ -16,6 +16,7 @@ migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
+    app.url_map.strict_slashes = False
     cors_origins = os.getenv(
         'CORS_ALLOWED_ORIGINS',
         'http://localhost:5001,http://127.0.0.1:5001'
