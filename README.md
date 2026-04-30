@@ -2,6 +2,9 @@
 
 Manage exclusive events the way people actually use social media. Send OTP codes via Instagram DMs, let people RSVP without creating another account, and keep control of who gets in. It's like a VIP list, but make it digital.
 
+## How to try it out
+You can try the app using the ‘admin’ account. However, since this is an invite-only website, you’ll need to invite someone else’s account before logging in with them. Otherwise, you’ll get an unauthorised error. Feel free to dm me tho on Slack if you have any further questions
+
 ## What This Does
 
 - **Invite folks via Instagram** — Guests get a 6-digit code texted to their DMs. No email signups, no separate accounts.
